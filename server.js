@@ -39,6 +39,7 @@ app.post('/create_account', function(req,res){
     res.render('error', {error_msg: "Your password must be at least " + password_min_length + " characters long.", return_page: "/"});
   } else {
     var salt = crypto.randomBytes(16);
+    console.log(salt);
     var hash = crypto.createHash('sha256');
     hash.update(password + salt);
     password = hash.digest('hex');
@@ -68,11 +69,9 @@ app.post('/create_account', function(req,res){
 app.post('/test', function(req,res){
   var pass = req.body.text;
   var salt = req.body.salt;
-  console.log("HEre!");
   var hash = crypto.createHash('sha256');
   hash.update(pass + salt);
   var hashedText = hash.digest('hex');
-  console.log("HERe2!");
   res.render('test', {hash: hashedText, pass: pass, salt: salt});
 });
 

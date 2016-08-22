@@ -38,15 +38,17 @@ app.post('/create_account', function(req,res){
   } else if (password.length < password_min_length){
     res.render('error', {error_msg: "Your password must be at least " + password_min_length + " characters long.", return_page: "/"});
   } else {
+    var salt = crypto.randomBytes(16);
     var hash = crypto.createHash('sha256');
-    hash.update(password);
+    hash.update(password + salt);
     password = hash.digest('hex');
     var table = "users";
 	  var params = {
 		  TableName:table,
 		  Item:{
 			  "username":name,
-			  "password":password
+			  "password":password,
+			  "salt":salt
 		  }
 	  }
 
@@ -64,11 +66,12 @@ app.post('/create_account', function(req,res){
 });
 
 app.post('/test', function(req,res){
-  var text = req.body.text;
+  var pass = req.body.text;
+  var salt = req.body.salt;
   var hash = crypto.createHash('sha256');
-  hash.update(text);
+  hash.update(text + salt);
   var hashedText = hash.digest('hex');
-  res.render('test', {hash: hashedText, text: text});
+  res.render('test', {hash: hashedText, text: text, salt: salt});
 });
 
 app.use(function(req,res){

@@ -62,7 +62,7 @@ app.post('/create_account', function(req,res){
 			  "salt":salt
 		  }
 	  }
-    
+    var username_taken = 0;
     docClient.query(checkName, function(err, data) {
       if (err) {
         console.error("Database error: ", JSON.stringify(err, null, 2));
@@ -70,12 +70,14 @@ app.post('/create_account', function(req,res){
         return;
       } else {
         if (Object.keys(data).length !== 0) {
+          username_taken = 1;
           res.render('error', {error_msg: "This username is already taken. Please try again.", return_page: "/"});
           return;
         }
       }
     });
     
+    console.log("username_taken = " + username_taken);
 	  docClient.put(params, function(err, data) {
    	  if (err) {
         console.error("Unable to add item. Error JSON:", JSON.stringify(err, null, 2));

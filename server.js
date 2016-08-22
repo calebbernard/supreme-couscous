@@ -26,25 +26,40 @@ var sitename = "Branches";
 
 
 app.get('/', function(req,res){
-	res.render('home', {sitename: sitename});
+  if(sess.name === "" || sess.name === undefined){
+		res.render('/home', {sitename: sitename, login_name: "Not logged in"});
+		return;
+	} else {
+	  res.render('home', {sitename: sitename, login_name: sess.name});
+	}
 });
 
+// Create a new account
+// NOTE: Later I should add an email field.
 app.post('/create_account', function(req,res){
   var password_min_length = 5;
   var name = req.body.name;
   var password = req.body.password;
+  
+  // Make sure the name and password were both entered.
   if (!name || !password){
     res.render('error', {error_msg: "One or more fields was left blank.", return_page: "/"});
     return;
+  
+  // Make sure the password is long enough.
   } else if (password.length < password_min_length){
     res.render('error', {error_msg: "Your password must be at least " + password_min_length + " characters long.", return_page: "/"});
     return;
   } else {
+    
+    // Generate a 16-byte ASCII salt.
     var salt = (crypto.randomBytes(16)).toString('hex');
-    console.log(salt);
     var hash = crypto.createHash('sha256');
+    // Hash the password + salt
     hash.update(password + salt);
     password = hash.digest('hex');
+    
+    // These objects are used for database calls
     var table = "users";
     var checkName = {
       TableName:table,
@@ -52,8 +67,7 @@ app.post('/create_account', function(req,res){
       ExpressionAttributeValues: {
         ":name":name
       }
-    }
-    
+    };
 	  var params = {
 		  TableName:table,
 		  Item:{
@@ -61,7 +75,9 @@ app.post('/create_account', function(req,res){
 			  "password":password,
 			  "salt":salt
 		  }
-	  }
+	  };
+	  
+	  // Check to see if the chosen username is already taken.
     docClient.query(checkName, function(err, data) {
       if (err) {
         console.error("Database error: ", JSON.stringify(err, null, 2));
@@ -73,6 +89,8 @@ app.post('/create_account', function(req,res){
           res.render('error', {error_msg: "This username is already taken. Please try again.", return_page: "/"});
           return;
         } else {
+          
+          // If everything so far is good, then we create the account.
           docClient.put(params, function(err, data) {
    	        if (err) {
               console.error("Unable to add item. Error JSON:", JSON.stringify(err, null, 2));
@@ -80,16 +98,92 @@ app.post('/create_account', function(req,res){
 		          return;
     	      } else {
               console.log("Added item:", JSON.stringify(data, null, 2));
-              res.send("Cool!");
+              res.render('success', {success_msg: "Cool!", return_page: "/"});
               return;
     	      }
           });
         }
       }
     });
-    
-	  
   }
+});
+
+
+// Login route
+app.post('/login', function(req,res){
+  var sess = req.session;
+  
+  // If they're already logged in, we want them to log out before logging in again.
+  if(sess.name !== "" && sess.name !== undefined){
+		res.render('error', {error_msg: "Please logout of your current account first (send GET request to /logout). currently logged in as:" + sess.name, return_page: "/"});
+		return;
+	}
+  
+  // Setup for our database queries
+  var name = req.body.username;
+  var pass = req.body.password;
+  var checkUsername = {
+    TableName:"users",
+      KeyConditionExpression: "username = :name",
+      ExpressionAttributeValues: {
+        ":name":name
+      }
+  };
+  var checkPassword = {
+    TableName:"users",
+    Key: {
+      "username":name
+    }
+  };
+  
+  // First, make sure the given username exists.
+  docClient.query(checkUsername, function(err,data) {
+    if (err) {
+      console.error("Database error: ", JSON.stringify(err, null, 2));
+      res.render('error', {error_msg: "Something weird happened with the database.", return_page: "/"});
+      return;
+    } else {
+      if (data.Count !== 0) {
+        console.log("Bad username");
+        res.render('error', {error_msg: "That username was not found.", return_page: "/"});
+        return;
+      } else {
+        // If the username exists, see if the password entered matches the one stored.
+        docClient.query(checkPassword, function(err,data) {
+          if (err){
+			      console.log("Error - could not read from database: " + JSON.stringify(err, null, 2));
+			      res.render('error', {error_msg: "Database is being weird", return_page: "/"});
+			      return;
+		      } else {
+		        // Now we want to hash the given password using the salt in the database.
+		        var salt = data.Item.salt;
+		        var hash = crypto.createHash('sha-256');
+		        hash.update(password + salt);
+		        var hashedPassword = hash.digest('hex');
+			      if (hashedPassword == data.Item.password){
+				      sess.name = name;
+				      console.log("Logged in as " + sess.name);
+				      res.render('success', {success_msg: "Logged in successfully! logged in as: " + sess.name, return_page: "/"});
+				      return;
+			      } else {
+				      res.render('error', {error_msg: "Wrong credentials! Please try again.", return_page: "/"});
+				      return;
+			     }
+		      }
+        });
+      }
+    }
+  });
+});
+
+// Logout route
+app.get("/logout", function(req,res){
+	sess = req.session;
+	var prev_name = sess.name;
+	sess.name = "";
+	console.log("logged out of " + prev_name);
+	res.render('success', {success_msg: "Logged out of " + prev_name + " successfully!", return_page: "/"});
+	return;
 });
 
 app.post('/test', function(req,res){

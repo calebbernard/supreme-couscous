@@ -14,7 +14,9 @@ var crypto = require('crypto');
 
 AWS.config.update({
 	region: "us-west-2",
-	endpoint: "https://dynamodb.us-west-2.amazonaws.com"
+	endpoint: "https://dynamodb.us-west-2.amazonaws.com",
+	accessKeyId: process.env.ACCESS_KEY_ID,
+	secretAccessKey: process.env.ACCESS_KEY
 });
 
 var docClient = new AWS.DynamoDB.DocumentClient();

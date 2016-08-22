@@ -189,15 +189,6 @@ app.get("/logout", function(req,res){
 	return;
 });
 
-app.post('/test', function(req,res){
-  var pass = req.body.text;
-  var salt = req.body.salt;
-  var hash = crypto.createHash('sha256');
-  hash.update(pass + salt);
-  var hashedText = hash.digest('hex');
-  res.render('test', {hash: hashedText, pass: pass, salt: salt});
-});
-
 app.use(function(req,res){
 	res.render('404');
 });

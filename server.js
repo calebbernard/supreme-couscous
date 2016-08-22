@@ -52,7 +52,20 @@ app.post('/create_account', function(req,res){
 			  "salt":salt
 		  }
 	  }
-
+    
+    docClient.get(params, function(err, data) {
+      if (err) {
+        console.error("Database error: ", JSON.stringify(err, null, 2));
+        res.render('error', {error_msg: "Something weird happened with the database.", return_page: "/"});
+        return;
+      } else {
+        if (username == data.Item.username) {
+          res.render('error', {error_msg: "This username is already taken. Please try again.", return_page: "/"});
+          return;
+        }
+      }
+    });
+    
 	  docClient.put(params, function(err, data) {
    	  if (err) {
         console.error("Unable to add item. Error JSON:", JSON.stringify(err, null, 2));
@@ -62,7 +75,7 @@ app.post('/create_account', function(req,res){
         console.log("Added item:", JSON.stringify(data, null, 2));
         res.send("Cool!");
     	}
-});
+    });
   }
 });
 

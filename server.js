@@ -82,6 +82,7 @@ app.post('/create_account', function(req,res){
     	} else {
         console.log("Added item:", JSON.stringify(data, null, 2));
         res.send("Cool!");
+        return;
     	}
     });
   }

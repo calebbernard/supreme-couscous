@@ -70,7 +70,7 @@ app.post('/test', function(req,res){
   var salt = req.body.salt;
   console.log("HEre!");
   var hash = crypto.createHash('sha256');
-  hash.update(text + salt);
+  hash.update(pass + salt);
   var hashedText = hash.digest('hex');
   console.log("HERe2!");
   res.render('test', {hash: hashedText, pass: pass, salt: salt});

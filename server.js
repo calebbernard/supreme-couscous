@@ -116,7 +116,7 @@ app.post('/login', function(req,res){
   
   // If they're already logged in, we want them to log out before logging in again.
   if(sess.name !== "" && sess.name !== undefined){
-		res.render('error', {error_msg: "Please logout of your current account first (send GET request to /logout). currently logged in as:" + sess.name, return_page: "/"});
+		res.render('error', {error_msg: "Please logout of your current account first. Currently logged in as:" + sess.name, return_page: "/"});
 		return;
 	}
   
@@ -124,7 +124,11 @@ app.post('/login', function(req,res){
   var name = req.body.name;
   var pass = req.body.password;
   
-  //NOTE: add check to make sure both forms were filled here
+  if (!name || !pass) {
+    res.render('error', {error_msg: "One or more required fields was left blank.", return_page: "/"});
+    return;
+  }
+  
   var checkUsername = {
     TableName:"users",
       KeyConditionExpression: "username = :name",
@@ -191,6 +195,7 @@ app.get("/logout", function(req,res){
 	  console.log("logged out of " + prev_name);
 	  res.render('success', {success_msg: "Logged out of " + prev_name + " successfully!", return_page: "/"});
 	  return;
+	}
 });
 
 app.use(function(req,res){

@@ -182,11 +182,15 @@ app.post('/login', function(req,res){
 // Logout route
 app.get("/logout", function(req,res){
 	sess = req.session;
-	var prev_name = sess.name;
-	sess.name = "";
-	console.log("logged out of " + prev_name);
-	res.render('success', {success_msg: "Logged out of " + prev_name + " successfully!", return_page: "/"});
-	return;
+	if (sess.name === "" || sess.name === undefined) {
+	  res.render('success', {success_msg: "You were already not logged in.", return_page: "/"});
+	  return;
+	} else {
+	  var prev_name = sess.name;
+	  sess.name = "";
+	  console.log("logged out of " + prev_name);
+	  res.render('success', {success_msg: "Logged out of " + prev_name + " successfully!", return_page: "/"});
+	  return;
 });
 
 app.use(function(req,res){

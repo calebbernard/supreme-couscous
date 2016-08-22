@@ -9,7 +9,8 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 var session = require('express-session');
 app.use(session({secret: process.env.NODESECRET}));
-var AWS = require("aws-sdk");
+var AWS = require('aws-sdk');
+var crypto = require('crypto');
 
 AWS.config.update({
 	region: "us-west-2",
@@ -24,6 +25,14 @@ var sitename = "Branches";
 
 app.get('/', function(req,res){
 	res.render('home', {sitename: sitename});
+});
+
+app.post('/test', function(req,res){
+  var text = req.body.text;
+  var hash = crypto.createHash('sha256');
+  hash.update(text);
+  var hashedText = hash.digest('hex');
+  res.render('test', {hash: hashedText, text: text});
 });
 
 app.use(function(req,res){

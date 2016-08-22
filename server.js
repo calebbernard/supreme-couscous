@@ -38,7 +38,7 @@ app.post('/create_account', function(req,res){
   } else if (password.length < password_min_length){
     res.render('error', {error_msg: "Your password must be at least " + password_min_length + " characters long.", return_page: "/"});
   } else {
-    var salt = buffer.toString(crypto.randomBytes(16));
+    var salt = (crypto.randomBytes(16)).toString();
     console.log(salt);
     var hash = crypto.createHash('sha256');
     hash.update(password + salt);

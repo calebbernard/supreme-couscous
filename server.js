@@ -31,7 +31,7 @@ app.get('/', function(req,res){
 		res.render('home', {sitename: sitename, login_name: "Not logged in"});
 		return;
 	} else {
-	  res.render('home', {sitename: sitename, login_name: sess.name});
+	  res.render('home', {sitename: sitename, logged_in_as: "Logged in as: " + sess.name});
 	}
 });
 
@@ -99,7 +99,7 @@ app.post('/create_account', function(req,res){
 		          return;
     	      } else {
               console.log("Added item:", JSON.stringify(data, null, 2));
-              res.render('success', {success_msg: "Cool!", return_page: "/"});
+              res.render('success', {success_msg: "Account created successfully!", return_page: "/"});
               return;
     	      }
           });

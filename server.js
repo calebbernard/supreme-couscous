@@ -150,7 +150,7 @@ app.post('/login', function(req,res){
         return;
       } else {
         // If the username exists, see if the password entered matches the one stored.
-        docClient.query(checkPassword, function(err,data) {
+        docClient.get(checkPassword, function(err,data) {
           if (err){
 			      console.log("Error - could not read from database: " + JSON.stringify(err, null, 2));
 			      res.render('error', {error_msg: "Database is being weird", return_page: "/"});

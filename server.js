@@ -27,6 +27,17 @@ app.get('/', function(req,res){
 	res.render('home', {sitename: sitename});
 });
 
+app.post('/create_account', function(req,res){
+  var name = req.body.name;
+  var password = req.body.password;
+  if (!name || !password){
+    res.render(error, {error_msg: "One or more fields was left blank.", return_page: "/"})
+  }
+  else {
+    res.send("Cool!");
+  }
+});
+
 app.post('/test', function(req,res){
   var text = req.body.text;
   var hash = crypto.createHash('sha256');

@@ -28,7 +28,7 @@ var sitename = "Branches";
 app.get('/', function(req,res){
   sess = req.session;
   if(sess.name === "" || sess.name === undefined){
-		res.render('home', {sitename: sitename, login_name: "Not logged in"});
+		res.render('home', {sitename: sitename, logged_in_as: "Not logged in"});
 		return;
 	} else {
 	  res.render('home', {sitename: sitename, logged_in_as: "Logged in as: " + sess.name});

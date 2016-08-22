@@ -34,7 +34,25 @@ app.post('/create_account', function(req,res){
     res.render('error', {error_msg: "One or more fields was left blank.", return_page: "/"});
   }
   else {
-    res.send("Cool!");
+    var table = "users";
+	  var params = {
+		  TableName:table,
+		  Item:{
+			  "username":name,
+			  "password":password
+		  }
+	  }
+
+	  docClient.put(params, function(err, data) {
+   	  if (err) {
+        console.error("Unable to add item. Error JSON:", JSON.stringify(err, null, 2));
+		    res.render('error', {error_msg: "Account could not be created.", return_page: "/"});
+		    return;
+    	} else {
+        console.log("Added item:", JSON.stringify(data, null, 2));
+        res.send("Cool!");
+    	}
+});
   }
 });
 

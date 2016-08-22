@@ -15,6 +15,7 @@
 	<input type="text" id="name" name="name" /><br>
 	<label for="password">Password:</label>
 	<input type="password" id="password" name="password" /><br>
+	<input type="hidden" name="page" value="/" />
 	<input type="submit" />
 </form>
 
@@ -26,12 +27,14 @@
   <input type="text" id="name" name="name" /><br>
   <label for="password">Password:</label>
   <input type="password" id="password" name="password" /><br>
+  <input type="hidden" name="page" value="/" />
   <input type="submit" />
 </form>
 
 <br>
 
-<form method="GET" action="logout">
+<form method="POST" action="logout">
   <label for="logout">Logout:</label>
+	<input type="hidden" name="page" value="/" />
   <input type="submit" id="logout" />
 </form>

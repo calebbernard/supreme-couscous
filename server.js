@@ -41,15 +41,16 @@ app.post('/create_account', function(req,res){
   var password_min_length = 5;
   var name = req.body.name;
   var password = req.body.password;
+  var return_page = req.body.return_page;
   
   // Make sure the name and password were both entered.
   if (!name || !password){
-    res.render('error', {error_msg: "One or more fields was left blank.", return_page: "/"});
+    res.render('error', {error_msg: "One or more fields was left blank.", return_page: return_page});
     return;
   
   // Make sure the password is long enough.
   } else if (password.length < password_min_length){
-    res.render('error', {error_msg: "Your password must be at least " + password_min_length + " characters long.", return_page: "/"});
+    res.render('error', {error_msg: "Your password must be at least " + password_min_length + " characters long.", return_page: return_page});
     return;
   } else {
     
@@ -82,12 +83,12 @@ app.post('/create_account', function(req,res){
     docClient.query(checkName, function(err, data) {
       if (err) {
         console.error("Database error: ", JSON.stringify(err, null, 2));
-        res.render('error', {error_msg: "Something weird happened with the database.", return_page: "/"});
+        res.render('error', {error_msg: "Something weird happened with the database.", return_page: return_page});
         return;
       } else {
         if (data.Count !== 0) {
           console.log("Username taken.");
-          res.render('error', {error_msg: "This username is already taken. Please try again.", return_page: "/"});
+          res.render('error', {error_msg: "This username is already taken. Please try again.", return_page: return_page});
           return;
         } else {
           
@@ -95,11 +96,11 @@ app.post('/create_account', function(req,res){
           docClient.put(params, function(err, data) {
    	        if (err) {
               console.error("Unable to add item. Error JSON:", JSON.stringify(err, null, 2));
-		          res.render('error', {error_msg: "Account could not be created.", return_page: "/"});
+		          res.render('error', {error_msg: "Account could not be created.", return_page: return_page});
 		          return;
     	      } else {
               console.log("Added item:", JSON.stringify(data, null, 2));
-              res.render('success', {success_msg: "Account created successfully!", return_page: "/"});
+              res.render('success', {success_msg: "Account created successfully!", return_page: return_page});
               return;
     	      }
           });
@@ -113,19 +114,20 @@ app.post('/create_account', function(req,res){
 // Login route
 app.post('/login', function(req,res){
   var sess = req.session;
-  
-  // If they're already logged in, we want them to log out before logging in again.
-  if(sess.name !== "" && sess.name !== undefined){
-		res.render('error', {error_msg: "Please logout of your current account first. Currently logged in as:" + sess.name, return_page: "/"});
-		return;
-	}
-  
+
   // Setup for our database queries
   var name = req.body.name;
   var pass = req.body.password;
+  var return_page = req.body.page;
+  
+  // If they're already logged in, we want them to log out before logging in again.
+  if(sess.name !== "" && sess.name !== undefined){
+		res.render('error', {error_msg: "Please logout of your current account first. Currently logged in as:" + sess.name, return_page: return_page});
+		return;
+  }
   
   if (!name || !pass) {
-    res.render('error', {error_msg: "One or more required fields was left blank.", return_page: "/"});
+    res.render('error', {error_msg: "One or more required fields was left blank.", return_page: return_page});
     return;
   }
   
@@ -147,19 +149,19 @@ app.post('/login', function(req,res){
   docClient.query(checkUsername, function(err,data) {
     if (err) {
       console.error("Database error: ", JSON.stringify(err, null, 2));
-      res.render('error', {error_msg: "Something weird happened with the database.", return_page: "/"});
+      res.render('error', {error_msg: "Something weird happened with the database.", return_page: return_page});
       return;
     } else {
       if (data.Count === 0) {
         console.log("Bad username");
-        res.render('error', {error_msg: "That username was not found.", return_page: "/"});
+        res.render('error', {error_msg: "That username was not found.", return_page: return_page});
         return;
       } else {
         // If the username exists, see if the password entered matches the one stored.
         docClient.get(checkPassword, function(err,data) {
           if (err){
 			      console.log("Error - could not read from database: " + JSON.stringify(err, null, 2));
-			      res.render('error', {error_msg: "Database is being weird", return_page: "/"});
+			      res.render('error', {error_msg: "Database is being weird", return_page: return_page});
 			      return;
 		      } else {
 		        // Now we want to hash the given password using the salt in the database.
@@ -170,10 +172,10 @@ app.post('/login', function(req,res){
 			      if (hashedPassword == data.Item.password){
 				      sess.name = name;
 				      console.log("Logged in as " + sess.name);
-				      res.render('success', {success_msg: "Logged in successfully! logged in as: " + sess.name, return_page: "/"});
+				      res.render('success', {success_msg: "Logged in successfully! logged in as: " + sess.name, return_page: return_page});
 				      return;
 			      } else {
-				      res.render('error', {error_msg: "Wrong credentials! Please try again.", return_page: "/"});
+				      res.render('error', {error_msg: "Wrong credentials! Please try again.", return_page: return_page});
 				      return;
 			     }
 		      }
@@ -184,16 +186,17 @@ app.post('/login', function(req,res){
 });
 
 // Logout route
-app.get("/logout", function(req,res){
+app.post("/logout", function(req,res){
 	sess = req.session;
+	var return_page = req.body.return_page;
 	if (sess.name === "" || sess.name === undefined) {
-	  res.render('success', {success_msg: "You were already not logged in.", return_page: "/"});
+	  res.render('success', {success_msg: "You were already not logged in.", return_page: return_page});
 	  return;
 	} else {
 	  var prev_name = sess.name;
 	  sess.name = "";
 	  console.log("logged out of " + prev_name);
-	  res.render('success', {success_msg: "Logged out of " + prev_name + " successfully!", return_page: "/"});
+	  res.render('success', {success_msg: "Logged out of " + prev_name + " successfully!", return_page: return_page});
 	  return;
 	}
 });

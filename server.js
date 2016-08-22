@@ -67,7 +67,7 @@ app.post('/create_account', function(req,res){
         res.render('error', {error_msg: "Something weird happened with the database.", return_page: "/"});
         return;
       } else {
-        if (name == data.Items[0].username) {
+        if (Object.keys(data).length !== 0) {
           res.render('error', {error_msg: "This username is already taken. Please try again.", return_page: "/"});
           return;
         }

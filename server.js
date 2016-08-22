@@ -161,7 +161,7 @@ app.post('/login', function(req,res){
 		        // Now we want to hash the given password using the salt in the database.
 		        var salt = data.Item.salt;
 		        var hash = crypto.createHash('sha256');
-		        hash.update(password + salt);
+		        hash.update(pass + salt);
 		        var hashedPassword = hash.digest('hex');
 			      if (hashedPassword == data.Item.password){
 				      sess.name = name;

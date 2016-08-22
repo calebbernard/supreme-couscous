@@ -31,7 +31,7 @@ app.post('/create_account', function(req,res){
   var name = req.body.name;
   var password = req.body.password;
   if (!name || !password){
-    res.render(error, {error_msg: "One or more fields was left blank.", return_page: "/"})
+    res.render(error, {error_msg: "One or more fields was left blank.", return_page: "/"});
   }
   else {
     res.send("Cool!");

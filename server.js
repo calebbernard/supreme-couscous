@@ -60,13 +60,13 @@ app.post('/create_account', function(req,res){
 		  }
 	  }
     
-    docClient.get(checkName, function(err, data) {
+    docClient.query(checkName, function(err, data) {
       if (err) {
         console.error("Database error: ", JSON.stringify(err, null, 2));
         res.render('error', {error_msg: "Something weird happened with the database.", return_page: "/"});
         return;
       } else {
-        if (username == data.Item.username) {
+        if (name == data.Item.username) {
           res.render('error', {error_msg: "This username is already taken. Please try again.", return_page: "/"});
           return;
         }

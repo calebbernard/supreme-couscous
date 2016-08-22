@@ -62,9 +62,7 @@ app.post('/create_account', function(req,res){
 			  "salt":salt
 		  }
 	  }
-    var username_taken = 0;
     docClient.query(checkName, function(err, data) {
-      console.log("here!");
       if (err) {
         console.error("Database error: ", JSON.stringify(err, null, 2));
         res.render('error', {error_msg: "Something weird happened with the database.", return_page: "/"});
@@ -72,25 +70,25 @@ app.post('/create_account', function(req,res){
       } else {
         if (Object.keys(data).length !== 0) {
           console.log("Username taken.");
-          username_taken = 1;
           res.render('error', {error_msg: "This username is already taken. Please try again.", return_page: "/"});
           return;
+        } else {
+          docClient.put(params, function(err, data) {
+   	        if (err) {
+              console.error("Unable to add item. Error JSON:", JSON.stringify(err, null, 2));
+		          res.render('error', {error_msg: "Account could not be created.", return_page: "/"});
+		          return;
+    	      } else {
+              console.log("Added item:", JSON.stringify(data, null, 2));
+              res.send("Cool!");
+              return;
+    	      }
+          });
         }
       }
     });
     
-    console.log("username_taken = " + username_taken);
-	  docClient.put(params, function(err, data) {
-   	  if (err) {
-        console.error("Unable to add item. Error JSON:", JSON.stringify(err, null, 2));
-		    res.render('error', {error_msg: "Account could not be created.", return_page: "/"});
-		    return;
-    	} else {
-        console.log("Added item:", JSON.stringify(data, null, 2));
-        res.send("Cool!");
-        return;
-    	}
-    });
+	  
   }
 });
 

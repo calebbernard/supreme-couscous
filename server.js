@@ -146,7 +146,7 @@ app.post('/login', function(req,res){
       res.render('error', {error_msg: "Something weird happened with the database.", return_page: "/"});
       return;
     } else {
-      if (data.Count !== 0) {
+      if (data.Count === 0) {
         console.log("Bad username");
         res.render('error', {error_msg: "That username was not found.", return_page: "/"});
         return;

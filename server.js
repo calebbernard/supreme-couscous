@@ -71,7 +71,7 @@ app.post('/test', function(req,res){
   var hash = crypto.createHash('sha256');
   hash.update(text + salt);
   var hashedText = hash.digest('hex');
-  res.render('test', {hash: hashedText, text: text, salt: salt});
+  res.render('test', {hash: hashedText, pass: pass, salt: salt});
 });
 
 app.use(function(req,res){

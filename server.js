@@ -19,9 +19,11 @@ AWS.config.update({
 var docClient = new AWS.DynamoDB.DocumentClient();
 var sess;
 
+var sitename = "Branches";
+
 
 app.get('/', function(req,res){
-	res.render('home');
+	res.render('home', {sitename: sitename});
 });
 
 app.use(function(req,res){

@@ -121,8 +121,10 @@ app.post('/login', function(req,res){
 	}
   
   // Setup for our database queries
-  var name = req.body.username;
+  var name = req.body.name;
   var pass = req.body.password;
+  
+  //NOTE: add check to make sure both forms were filled here
   var checkUsername = {
     TableName:"users",
       KeyConditionExpression: "username = :name",
@@ -132,7 +134,7 @@ app.post('/login', function(req,res){
   };
   var checkPassword = {
     TableName:"users",
-    Key: {
+    Key:{
       "username":name
     }
   };

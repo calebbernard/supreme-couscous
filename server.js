@@ -8,8 +8,7 @@ var bodyParser = require('body-parser');
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 var session = require('express-session');
-
-app.use(session({secret: 'calebcalebcaleb'}));
+app.use(session({secret: process.env.NODESECRET}));
 var AWS = require("aws-sdk");
 
 AWS.config.update({

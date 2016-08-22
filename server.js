@@ -68,9 +68,11 @@ app.post('/create_account', function(req,res){
 app.post('/test', function(req,res){
   var pass = req.body.text;
   var salt = req.body.salt;
+  console.log("HEre!");
   var hash = crypto.createHash('sha256');
   hash.update(text + salt);
   var hashedText = hash.digest('hex');
+  console.log("HERe2!");
   res.render('test', {hash: hashedText, pass: pass, salt: salt});
 });
 

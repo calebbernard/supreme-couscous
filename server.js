@@ -41,7 +41,7 @@ app.post('/create_account', function(req,res){
   var password_min_length = 5;
   var name = req.body.name;
   var password = req.body.password;
-  var return_page = req.body.return_page;
+  var return_page = req.body.page;
   
   // Make sure the name and password were both entered.
   if (!name || !password){
@@ -188,7 +188,7 @@ app.post('/login', function(req,res){
 // Logout route
 app.post("/logout", function(req,res){
 	sess = req.session;
-	var return_page = req.body.return_page;
+	var return_page = req.body.page;
 	if (sess.name === "" || sess.name === undefined) {
 	  res.render('success', {success_msg: "You were already not logged in.", return_page: return_page});
 	  return;

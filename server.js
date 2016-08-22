@@ -30,12 +30,17 @@ app.get('/', function(req,res){
 });
 
 app.post('/create_account', function(req,res){
+  var password_min_length = 5;
   var name = req.body.name;
   var password = req.body.password;
   if (!name || !password){
     res.render('error', {error_msg: "One or more fields was left blank.", return_page: "/"});
-  }
-  else {
+  } else if (password.length < password_min_length){
+    res.render('error', {error_msg: "Your password must be at least " + password_min_length + " characters long.", return_page: "/"});
+  } else {
+    var hash = crypto.createHash('sha256');
+    hash.update(password);
+    password = hash.digest('hex');
     var table = "users";
 	  var params = {
 		  TableName:table,

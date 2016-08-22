@@ -44,6 +44,13 @@ app.post('/create_account', function(req,res){
     hash.update(password + salt);
     password = hash.digest('hex');
     var table = "users";
+    var checkName = {
+      TableName:table,
+      Item:{
+        "username":name
+      }
+    }
+    
 	  var params = {
 		  TableName:table,
 		  Item:{
@@ -53,7 +60,7 @@ app.post('/create_account', function(req,res){
 		  }
 	  }
     
-    docClient.get(params, function(err, data) {
+    docClient.get(checkName, function(err, data) {
       if (err) {
         console.error("Database error: ", JSON.stringify(err, null, 2));
         res.render('error', {error_msg: "Something weird happened with the database.", return_page: "/"});

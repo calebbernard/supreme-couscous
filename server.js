@@ -46,8 +46,9 @@ app.post('/create_account', function(req,res){
     var table = "users";
     var checkName = {
       TableName:table,
-      Item:{
-        "username":name
+      KeyConditionExpression: "username = :name",
+      ExpressionAttributeValues: {
+        ":name":name
       }
     }
     

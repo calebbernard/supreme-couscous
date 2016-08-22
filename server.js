@@ -35,8 +35,10 @@ app.post('/create_account', function(req,res){
   var password = req.body.password;
   if (!name || !password){
     res.render('error', {error_msg: "One or more fields was left blank.", return_page: "/"});
+    return;
   } else if (password.length < password_min_length){
     res.render('error', {error_msg: "Your password must be at least " + password_min_length + " characters long.", return_page: "/"});
+    return;
   } else {
     var salt = (crypto.randomBytes(16)).toString('hex');
     console.log(salt);

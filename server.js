@@ -173,7 +173,7 @@ app.get('/check_friend_requests', function(req,res){
   
   var params = {
 			TableName: "users",
-			FilterExpression: "username = :name",
+			KeyExpression: "username = :name",
 			ExpressionAttributeValues: {
 				":name":name
 			}

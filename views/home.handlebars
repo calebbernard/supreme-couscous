@@ -3,15 +3,13 @@
 <p>
 
 {{#if logged_in}}
-{{name}}
 <form method="POST" action="logout">
-  <label for="logout">Logout:</label>
+  Logged in as: {{name}}
 	<input type="hidden" name="page" value="/" />
-  <input type="submit" value="Logout" id="logout" />
+  <input type="submit" value="Logout" />
 </form>
 {{else}}
 <form method="POST" action="login">
-  <legend>Login:</legend>
   <label for="name">Username:</label>
   <input type="text" id="name" name="name" />
   <label for="password">Password:</label>
@@ -36,16 +34,3 @@
 </form>
 
 <br>
-
-
-
-<br>
-
-
-{{#if logged_in}}
-<form method="POST" action="logout">
-  <label for="logout">Logout:</label>
-	<input type="hidden" name="page" value="/" />
-  <input type="submit" id="logout" />
-</form>
-{{/if}}

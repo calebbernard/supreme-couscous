@@ -180,12 +180,12 @@ app.post('/login', function(req,res){
   
   // If they're already logged in, we want them to log out before logging in again.
   if(sess.name !== "" && sess.name !== undefined){
-		res.render('error', {error_msg: "Please logout of your current account first. Currently logged in as:" + sess.name, return_page: return_page});
+		res.render('error', {sitename: sitename, error_msg: "Please logout of your current account first. Currently logged in as:" + sess.name, return_page: return_page});
 		return;
   }
   
   if (!name || !pass) {
-    res.render('error', {error_msg: "One or more required fields was left blank.", return_page: return_page});
+    res.render('error', {sitename: sitename, error_msg: "One or more required fields was left blank.", return_page: return_page});
     return;
   }
   
@@ -207,19 +207,19 @@ app.post('/login', function(req,res){
   docClient.query(checkUsername, function(err,data) {
     if (err) {
       console.error("Database error: ", JSON.stringify(err, null, 2));
-      res.render('error', {error_msg: "Something weird happened with the database.", return_page: return_page});
+      res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
       return;
     } else {
       if (data.Count === 0) {
         console.log("Bad username");
-        res.render('error', {error_msg: "That username was not found.", return_page: return_page});
+        res.render('error', {sitename: sitename, error_msg: "That username was not found.", return_page: return_page});
         return;
       } else {
         // If the username exists, see if the password entered matches the one stored.
         docClient.get(checkPassword, function(err,data) {
           if (err){
 			      console.log("Error - could not read from database: " + JSON.stringify(err, null, 2));
-			      res.render('error', {error_msg: "Database is being weird", return_page: return_page});
+			      res.render('error', {sitename: sitename, error_msg: "Database is being weird", return_page: return_page});
 			      return;
 		      } else {
 		        // Now we want to hash the given password using the salt in the database.
@@ -229,10 +229,10 @@ app.post('/login', function(req,res){
 		        var hashedPassword = hash.digest('hex');
 			      if (hashedPassword == data.Item.password){
 				      sess.name = name;
-				      res.render('success', {success_msg: "Logged in successfully! logged in as: " + sess.name, return_page: return_page, logged_in: true, name: name});
+				      res.render('success', {sitename: sitename, success_msg: "Logged in successfully! logged in as: " + sess.name, return_page: return_page, logged_in: true, name: name});
 				      return;
 			      } else {
-				      res.render('error', {error_msg: "Wrong credentials! Please try again.", return_page: return_page});
+				      res.render('error', {sitename: sitename, error_msg: "Wrong credentials! Please try again.", return_page: return_page});
 				      return;
 			     }
 		      }
@@ -247,13 +247,13 @@ app.post("/logout", function(req,res){
 	sess = req.session;
 	var return_page = req.body.page;
 	if (sess.name === "" || sess.name === undefined) {
-	  res.render('success', {success_msg: "You were already not logged in.", return_page: return_page, logged_in: false});
+	  res.render('success', {sitename: sitename, success_msg: "You were already not logged in.", return_page: return_page, logged_in: false});
 	  return;
 	} else {
 	  var prev_name = sess.name;
 	  sess.name = "";
 	  console.log("logged out of " + prev_name);
-	  res.render('success', {success_msg: "Logged out of " + prev_name + " successfully!", return_page: return_page, logged_in: false});
+	  res.render('success', {sitename: sitename, success_msg: "Logged out of " + prev_name + " successfully!", return_page: return_page, logged_in: false});
 	  return;
 	}
 });

@@ -160,6 +160,40 @@ app.post('/add_friend', function(req,res){
 });
 
 
+app.get('/check_friend_requests', function(req,res){
+  sess = req.session;
+  var return_page = "/dashboard";
+  var logged_in;
+  var name = sess.name;
+  if(sess.name === "" || sess.name === undefined){
+    logged_in = false;
+    res.render('error', {sitename: sitename, error_msg: "Must be logged in to manage your friend requests!", return_page: return_page});
+    return;
+  }
+  
+  var params = {
+			TableName: "users",
+			FilterExpression: "username = :name",
+			ExpressionAttributeValues: {
+				":name":name
+			}
+		}
+  
+  docClient.query(params, function (err, data){
+    if (err) {
+      console.error("Database error: ", JSON.stringify(err, null, 2));
+      res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
+      return;
+    } else {
+      res.render('/check_friend_requests', {sitename: sitename, requests: data.Items[0].friend_requests, logged_in: true, name: name});
+      return;
+    }
+  });
+  
+});
+
+
+
 // Create a new account
 // NOTE: Later I should add an email field.
 app.post('/create_account', function(req,res){

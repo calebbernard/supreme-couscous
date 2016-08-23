@@ -77,7 +77,7 @@ app.get('/profile', function(req,res){
 app.post('/profile', function(req,res){
   var sess = req.session;
   var name = sess.name;
-  var return_page = sess.page;
+  var return_page = req.body.page || "/";
   if (name === "" || name === undefined) {
     res.render('error', {sitename: sitename, error_msg: "You must be logged in before you can view your profile!", return_page: return_page});
     return;
@@ -96,7 +96,7 @@ app.post('/create_account', function(req,res){
   var password_min_length = 5;
   var name = req.body.name;
   var password = req.body.password;
-  var return_page = req.body.page;
+  var return_page = req.body.page || "/";
   // Make sure they are not already logged in.
   if (sess.name !== "" && sess.name !== undefined) {
     res.render('error', {sitename: sitename, error_msg: "Please log out before making a new account.", return_page: return_page, logged_in: true, name: sess.name});
@@ -245,7 +245,7 @@ app.post('/login', function(req,res){
 // Logout route
 app.post("/logout", function(req,res){
 	sess = req.session;
-	var return_page = req.body.page;
+	var return_page = req.body.page || "/";
 	if (sess.name === "" || sess.name === undefined) {
 	  res.render('success', {sitename: sitename, success_msg: "You were already not logged in.", return_page: return_page, logged_in: false});
 	  return;

@@ -31,7 +31,7 @@ app.get('/', function(req,res){
 		res.render('home', {sitename: sitename, logged_in_as: "Not logged in"});
 		return;
 	} else {
-	  res.render('home', {sitename: sitename, logged_in: true, logged_in_as: "Logged in as: " + sess.name});
+	  res.render('home', {sitename: sitename, logged_in: true, name: sess.name});
 	}
 });
 
@@ -110,6 +110,17 @@ app.post('/create_account', function(req,res){
   }
 });
 
+app.post('/profile', function(req,res){
+  var sess = req.session;
+  var name = req.session.name;
+  var return_page = req.session.page;
+  if (name === "" || name === undefined) {
+    res.render('error', {error_msg: "You must be logged in before you can view your profile!", return_page: return_page});
+    return;
+  }
+  res.render('profile', {logged_in: true, username: name})
+  
+});
 
 // Login route
 app.post('/login', function(req,res){

@@ -3,7 +3,22 @@
 <p>
 
 {{#if logged_in}}
-{{logged_in_as}}
+{{name}}
+<form method="POST" action="logout">
+  <label for="logout">Logout:</label>
+	<input type="hidden" name="page" value="/" />
+  <input type="submit" value="Logout" id="logout" />
+</form>
+{{else}}
+<form method="POST" action="login">
+  <legend>Login:</legend>
+  <label for="name">Username:</label>
+  <input type="text" id="name" name="name" />
+  <label for="password">Password:</label>
+  <input type="password" id="password" name="password" />
+  <input type="hidden" name="page" value="/" />
+  <input type="submit" value="Login" />
+</form>
 {{/if}}
 </p>
 
@@ -22,15 +37,7 @@
 
 <br>
 
-<form method="POST" action="login">
-  <legend>Login:</legend>
-  <label for="name">Username:</label>
-  <input type="text" id="name" name="name" /><br>
-  <label for="password">Password:</label>
-  <input type="password" id="password" name="password" /><br>
-  <input type="hidden" name="page" value="/" />
-  <input type="submit" />
-</form>
+
 
 <br>
 

@@ -259,11 +259,11 @@ app.post("/logout", function(req,res){
 });
 
 app.use(function(req,res){
-	res.render('404');
+	res.render('404', {sitename: sitename});
 });
 
 app.use(function(err,req,res,next){
-	res.render('500');
+	res.render('500', {sitename: sitename});
 });
 
 app.listen(app.get('port'), function(){

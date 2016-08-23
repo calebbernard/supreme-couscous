@@ -176,7 +176,7 @@ app.post('/login', function(req,res){
   // Setup for our database queries
   var name = req.body.name;
   var pass = req.body.password;
-  var return_page = req.body.page;
+  var return_page = req.body.page || "/";
   
   // If they're already logged in, we want them to log out before logging in again.
   if(sess.name !== "" && sess.name !== undefined){

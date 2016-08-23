@@ -141,7 +141,7 @@ app.post('/create_account', function(req,res){
     return;
   // Make sure the username is not too long or short.
   } else if (name < 1 || name > username_max_length) {
-    res.render('error', {sitename: sitename, error_msg: "Username cannot be shorter than 1 or longer than " + username_max_length + "characters.", return_page: return_page});
+    res.render('error', {sitename: sitename, error_msg: "Username cannot be shorter than 1 or longer than " + username_max_length + " characters.", return_page: return_page});
     return;
   } else if (!pattern.test(name)) {
     res.render('error', {sitename: sitename, error_msg: "Username must only use alphanumeric characters.", return_page: return_page});

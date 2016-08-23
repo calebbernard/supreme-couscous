@@ -286,7 +286,7 @@ app.post("/delete_account", function(req,res){
   } else {
     var params = {
       TableName:"users",
-      Key = {
+      Key:{
         "username":name
       }
     }

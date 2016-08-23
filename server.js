@@ -126,7 +126,7 @@ app.post('/add_friend', function(req,res){
     Key: {'username': request},
     UpdateExpression : 'ADD #oldIds :newIds',
     ExpressionAttributeNames : {
-      '#oldIds' : 'ids'
+      '#oldIds' : 'friend_requests'
     },
     ExpressionAttributeValues : {
       ':newIds' : docClient.createSet([name])

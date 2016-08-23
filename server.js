@@ -36,6 +36,28 @@ app.get('/', function(req,res){
   res.render('home', {sitename: sitename, logged_in: logged_in, name: sess.name});
   return;
 });
+app.post('/', function(req,res){
+  sess = req.session;
+  var logged_in, name;
+  if(sess.name === "" || sess.name === undefined){
+    logged_in = false;
+  } else {
+    logged_in = true;
+  }
+  res.render('home', {sitename: sitename, logged_in: logged_in, name: sess.name});
+  return;
+});
+app.get('/create_account', function(req,res){
+  sess = req.session;
+  var logged_in, name;
+  if(sess.name === "" || sess.name === undefined){
+    logged_in = false;
+  } else {
+    logged_in = true;
+  }
+  res.render('create_account', {sitename: sitename, logged_in: logged_in, name: sess.name});
+  return;
+});
 
 // Profile page
 app.get('/profile', function(req,res){
@@ -44,7 +66,7 @@ app.get('/profile', function(req,res){
   var logged_in, name;
   if(sess.name === "" || sess.name === undefined){
     logged_in = false;
-    res.render('error', {error_msg: "Must be logged in to view profile!", return_page: return_page});
+    res.render('error', {sitename: sitename, error_msg: "Must be logged in to view profile!", return_page: return_page});
     return;
   } else {
     logged_in = true;
@@ -52,6 +74,19 @@ app.get('/profile', function(req,res){
   res.render('profile', {sitename: sitename, logged_in: logged_in, name: sess.name});
   return;
 });
+app.post('/profile', function(req,res){
+  var sess = req.session;
+  var name = sess.name;
+  var return_page = sess.page;
+  if (name === "" || name === undefined) {
+    res.render('error', {sitename: sitename, error_msg: "You must be logged in before you can view your profile!", return_page: return_page});
+    return;
+  }
+  res.render('profile', {sitename: sitename, logged_in: true, name: name})
+  return;
+});
+
+
 
 
 // Create a new account
@@ -63,15 +98,15 @@ app.post('/create_account', function(req,res){
   var return_page = req.body.page;
   // Make sure they are not already logged in.
   if (sess.name !== "" && sess.name !== undefined) {
-    res.render('error', {error_msg: "Please log out before making a new account.", return_page: return_page, logged_in: true, name: sess.name});
+    res.render('error', {sitename: sitename, error_msg: "Please log out before making a new account.", return_page: return_page, logged_in: true, name: sess.name});
     return;
   // Make sure the name and password were both entered.
   } else if (!name || !password){
-    res.render('error', {error_msg: "One or more fields was left blank.", return_page: return_page});
+    res.render('error', {sitename: sitename, error_msg: "One or more fields was left blank.", return_page: return_page});
     return;
   // Make sure the password is long enough.
   } else if (password.length < password_min_length){
-    res.render('error', {error_msg: "Your password must be at least " + password_min_length + " characters long.", return_page: return_page});
+    res.render('error', {sitename: sitename, error_msg: "Your password must be at least " + password_min_length + " characters long.", return_page: return_page});
     return;
   } else {
     
@@ -104,12 +139,12 @@ app.post('/create_account', function(req,res){
     docClient.query(checkName, function(err, data) {
       if (err) {
         console.error("Database error: ", JSON.stringify(err, null, 2));
-        res.render('error', {error_msg: "Something weird happened with the database.", return_page: return_page});
+        res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
         return;
       } else {
         if (data.Count !== 0) {
           console.log("Username taken.");
-          res.render('error', {error_msg: "This username is already taken. Please try again.", return_page: return_page});
+          res.render('error', {sitename: sitename, error_msg: "This username is already taken. Please try again.", return_page: return_page});
           return;
         } else {
           
@@ -117,12 +152,12 @@ app.post('/create_account', function(req,res){
           docClient.put(params, function(err, data) {
    	        if (err) {
               console.error("Unable to add item. Error JSON:", JSON.stringify(err, null, 2));
-		          res.render('error', {error_msg: "Account could not be created.", return_page: return_page});
+		          res.render('error', {sitename: sitename, error_msg: "Account could not be created.", return_page: return_page});
 		          return;
     	      } else {
               console.log("Added item:", JSON.stringify(data, null, 2));
               sess.name = name;
-              res.render('success', {success_msg: "Account created successfully!", return_page: return_page, logged_in: true, name: name});
+              res.render('success', {sitename: sitename, success_msg: "Account created successfully!", return_page: return_page, logged_in: true, name: name});
               return;
     	      }
           });
@@ -132,17 +167,6 @@ app.post('/create_account', function(req,res){
   }
 });
 
-app.post('/profile', function(req,res){
-  var sess = req.session;
-  var name = req.session.name;
-  var return_page = req.session.page;
-  if (name === "" || name === undefined) {
-    res.render('error', {error_msg: "You must be logged in before you can view your profile!", return_page: return_page});
-    return;
-  }
-  res.render('profile', {logged_in: true, name: name})
-  
-});
 
 // Login route
 app.post('/login', function(req,res){

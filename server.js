@@ -44,7 +44,7 @@ app.post('/create_account', function(req,res){
   var return_page = req.body.page;
   // Make sure they are not already logged in.
   if (sess.name !== "" && sess.name !== undefined) {
-    res.render('error', {error_msg: "Please log out before making a new account.", return_page: return_page, logged_in: true, name: name});
+    res.render('error', {error_msg: "Please log out before making a new account.", return_page: return_page, logged_in: true, name: sess.name});
     return;
   // Make sure the name and password were both entered.
   } else if (!name || !password){

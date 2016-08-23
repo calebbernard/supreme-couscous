@@ -201,7 +201,7 @@ app.get('/check_friend_requests', function(req,res){
       res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
       return;
     } else {
-        res.render('check_friend_requests', {sitename: sitename, requests_in: data.Items[0].friend_requests_inbox.values, requests_out: data.Items[0].friend_requests_outbox.values logged_in: true, name: name});
+        res.render('check_friend_requests', {sitename: sitename, requests_in: data.Items[0].friend_requests_inbox.values, requests_out: data.Items[0].friend_requests_outbox.values, logged_in: true, name: name});
         return;
     }
   });

@@ -86,7 +86,32 @@ app.post('/dashboard', function(req,res){
   return;
 });
 
-
+// Friend Request Page
+app.get('/add_friend', function(req,res){
+  sess = req.session;
+  var return_page = "/";
+  var logged_in, name;
+  if(sess.name === "" || sess.name === undefined){
+    logged_in = false;
+    res.render('error', {sitename: sitename, error_msg: "Must be logged in to add a friend!", return_page: return_page});
+    return;
+  } else {
+    logged_in = true;
+    res.render('dashboard', {sitename: sitename, logged_in: logged_in, name: sess.name});
+    return;
+  }
+});
+app.post('/dashboard', function(req,res){
+  var sess = req.session;
+  var name = sess.name;
+  var return_page = req.body.page || "/";
+  if (name === "" || name === undefined) {
+    res.render('error', {sitename: sitename, error_msg: "You must be logged in before you can view your profile!", return_page: return_page});
+    return;
+  }
+  res.render('dashboard', {sitename: sitename, logged_in: true, name: name})
+  return;
+});
 
 
 // Create a new account

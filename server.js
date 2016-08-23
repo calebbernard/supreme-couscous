@@ -144,7 +144,6 @@ app.post('/create_account', function(req,res){
         return;
       } else {
         if (data.Count !== 0) {
-          console.log("Username taken.");
           res.render('error', {sitename: sitename, error_msg: "This username is already taken. Please try again.", return_page: return_page});
           return;
         } else {
@@ -156,7 +155,6 @@ app.post('/create_account', function(req,res){
 		          res.render('error', {sitename: sitename, error_msg: "Account could not be created.", return_page: return_page});
 		          return;
     	      } else {
-              console.log("Added item:", JSON.stringify(data, null, 2));
               sess.name = name;
               res.render('success', {sitename: sitename, success_msg: "Account created successfully!", return_page: return_page, logged_in: true, name: sess.name});
               return;
@@ -211,7 +209,6 @@ app.post('/login', function(req,res){
       return;
     } else {
       if (data.Count === 0) {
-        console.log("Bad username");
         res.render('error', {sitename: sitename, error_msg: "That username was not found.", return_page: return_page});
         return;
       } else {
@@ -252,7 +249,6 @@ app.post("/logout", function(req,res){
 	} else {
 	  var prev_name = sess.name;
 	  sess.name = "";
-	  console.log("logged out of " + prev_name);
 	  res.render('success', {sitename: sitename, success_msg: "Logged out of " + prev_name + " successfully!", return_page: return_page, logged_in: false});
 	  return;
 	}

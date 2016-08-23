@@ -1,0 +1,8 @@
+<p>Are you sure you want to delete your account? This action cannot be undone.</p>
+<form method="POST" action="/delete_account">
+  Enter your password: <input type="password" name="password" />
+  <input type="hidden" name="page" value="/delete_account" />
+  <input type="submit" class="btn btn-danger" value="Yes, destroy my account forever!" />
+</form>
+<br>
+<a class="btn btn-info" href="/">Aah! I want to keep my account!</a>

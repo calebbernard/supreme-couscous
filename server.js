@@ -258,6 +258,69 @@ app.post("/logout", function(req,res){
 	}
 });
 
+app.get("/delete_account", function(req,res){
+  sess = req.session;
+  var return_page = "/";
+  var logged_in, name;
+  if(sess.name === "" || sess.name === undefined){
+    logged_in = false;
+    res.render('error', {sitename: sitename, error_msg: "Must be logged in to delete account!", return_page: return_page});
+    return;
+  } else {
+    logged_in = true;
+  }
+  res.render('delete_account', {sitename: sitename, logged_in: logged_in, name: sess.name});
+  return;
+});
+// Monitor this whenever I modify the database -- I need to remove all references to this account!
+// Also to consider: What to do about this user's shared content?
+app.post("/delete_account", function(req,res){
+  sess = req.session;
+  var return_page = "/";
+  var logged_in, name;
+  var pass = req.body.password;
+  if(sess.name === "" || sess.name === undefined){
+    logged_in = false;
+    res.render('error', {sitename: sitename, error_msg: "Must be logged in to delete account!", return_page: return_page});
+    return;
+  } else {
+    var params = {
+      TableName:"users",
+      Key = {
+        "username":name
+      }
+    }
+    // See if the password entered matches the one stored.
+        docClient.get(params, function(err,data) {
+          if (err){
+			      console.log("Error - could not read from database: " + JSON.stringify(err, null, 2));
+			      res.render('error', {sitename: sitename, error_msg: "Database is being weird", return_page: return_page});
+			      return;
+		      } else {
+		        // Now we want to hash the given password using the salt in the database.
+		        var salt = data.Item.salt;
+		        var hash = crypto.createHash('sha256');
+		        hash.update(pass + salt);
+		        var hashedPassword = hash.digest('hex');
+			      if (hashedPassword == data.Item.password){
+			        // Delete the account here. Update this as mentioned above.
+				      docClient.delete(params, function(err, data) {
+				        if (err){
+				          res.render('error', {sitename: sitename, error_msg: "Database error - could not delete account.", return_page: return_page, logged_in: true, name: sess.name});
+				        } else {
+				        res.render('success', {sitename: sitename, success_msg: "Account deleted.", return_page: "/", logged_in: false});
+				        return;
+				      });
+				      
+			      } else {
+				      res.render('error', {sitename: sitename, error_msg: "Wrong credentials! Please try again.", return_page: return_page});
+				      return;
+			     }
+		      }
+        });
+  }
+});
+
 app.use(function(req,res){
 	res.render('404', {sitename: sitename});
 });

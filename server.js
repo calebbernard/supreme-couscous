@@ -60,7 +60,7 @@ app.get('/create_account', function(req,res){
 });
 
 // Profile page
-app.get('/profile', function(req,res){
+app.get('/dashboard', function(req,res){
   sess = req.session;
   var return_page = "/";
   var logged_in, name;
@@ -71,10 +71,10 @@ app.get('/profile', function(req,res){
   } else {
     logged_in = true;
   }
-  res.render('profile', {sitename: sitename, logged_in: logged_in, name: sess.name});
+  res.render('dashboard', {sitename: sitename, logged_in: logged_in, name: sess.name});
   return;
 });
-app.post('/profile', function(req,res){
+app.post('/dashboard', function(req,res){
   var sess = req.session;
   var name = sess.name;
   var return_page = req.body.page || "/";
@@ -82,7 +82,7 @@ app.post('/profile', function(req,res){
     res.render('error', {sitename: sitename, error_msg: "You must be logged in before you can view your profile!", return_page: return_page});
     return;
   }
-  res.render('profile', {sitename: sitename, logged_in: true, name: name})
+  res.render('dashboard', {sitename: sitename, logged_in: true, name: name})
   return;
 });
 

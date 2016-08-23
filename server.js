@@ -115,7 +115,10 @@ app.post('/add_friend', function(req,res){
   }
   var checkName = {
     TableName:'users',
-    Key:{'username':request}
+    KeyConditionExpression: "username = :name",
+      ExpressionAttributeValues: {
+        ":name":request
+      }
   };
   
   var params = {

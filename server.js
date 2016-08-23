@@ -157,7 +157,7 @@ app.post('/create_account', function(req,res){
     	      } else {
               console.log("Added item:", JSON.stringify(data, null, 2));
               sess.name = name;
-              res.render('success', {sitename: sitename, success_msg: "Account created successfully!", return_page: return_page, logged_in: true, name: name});
+              res.render('success', {sitename: sitename, success_msg: "Account created successfully!", return_page: return_page, logged_in: true, name: sess.name});
               return;
     	      }
           });

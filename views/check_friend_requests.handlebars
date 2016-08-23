@@ -1,16 +1,43 @@
-<h3>Pending Friend Requests:</h3>
+<h3>Friend Request Inbox</h3>
 <table class="table table-striped">
-  {{#each requests}}
+  {{#each requests_in}}
   <tr>
     <td>
       {{this}}
     </td>
     <td>
-      Accept
+      <form method="POST" action="/accept_friend_request">
+        <input type="hidden" name="who_to_accept" value="{{this}}" />
+        <input type="submit" class="btn btn-success" value="Accept" />
+      </form>
     </td>
     <td>
-      Reject
+      <form method="POST" action="/reject_friend_request">
+        <input type="hidden" name="who_to_reject" value="{{this}}" />
+        <input type="submit" class="btn btn-danger" value="Reject" />
+      </form>
     </td>
   </tr>
   {{/each}}
 </table>
+
+<hr>
+<h3>Friend Request Outbox</h3>
+<table class="table table-striped">
+  {{#each requests_out}}
+  <tr>
+    <td>
+      {{this}}
+    </td>
+    <td>
+      <form method="POST" action="/cancel_friend_request">
+        <input type="hidden" name="who_to_cancel" value="{{this}}" />
+        <input type="submit" class="btn btn-warning" value="Cancel" />
+      </form>
+    </td>
+  </tr>
+  {{/each}}
+</table>
+
+<hr>
+<a class="btn btn-default" href="/dashboard">Back to Dashboard</a>

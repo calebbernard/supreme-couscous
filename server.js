@@ -119,15 +119,26 @@ app.post('/add_friend', function(req,res){
       }
   };
   
-  var params = {
+  var theirParams = {
     TableName:'users',
     Key: {'username': request},
     UpdateExpression : 'ADD #oldIds :newIds',
     ExpressionAttributeNames : {
-      '#oldIds' : 'friend_requests'
+      '#oldIds' : 'friend_requests_inbox'
     },
     ExpressionAttributeValues : {
       ':newIds' : docClient.createSet([name])
+    }
+  };
+  var myParams = {
+    TableName:'users',
+    Key: {'username': name},
+    UpdateExpression : 'ADD #oldIds :newIds',
+    ExpressionAttributeNames : {
+      '#oldIds' : 'friend_requests_outbox'
+    },
+    ExpressionAttributeValues : {
+      ':newIds' : docClient.createSet([request])
     }
   };
   
@@ -142,15 +153,22 @@ app.post('/add_friend', function(req,res){
         res.render('error', {sitename: sitename, error_msg: "That username was not found.", return_page: return_page});
         return;
       } else {
-        docClient.update(params, function (err, data){
+        docClient.update(theirParams, function (err, data){
           if (err) {
             console.error("Database error: ", JSON.stringify(err, null, 2));
             res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
             return;
           } else {
-            res.render('success', {sitename: sitename, success_msg: "Friend request sent!", return_page: return_page, logged_in: true, name: name});
-            return;
-          }
+            docClient.update(theirParams, function (err, data){
+            if (err) {
+              console.error("Database error: ", JSON.stringify(err, null, 2));
+              res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
+              return;
+            } else {
+              res.render('success', {sitename: sitename, success_msg: "Friend request sent!", return_page: return_page, logged_in: true, name: name});
+              return;
+            }
+          });
         });
       }
     }
@@ -183,12 +201,8 @@ app.get('/check_friend_requests', function(req,res){
       res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
       return;
     } else {
-      //data.Items.forEach(function(item) {
-        console.log(data.Items[0].friend_requests);
-        res.render('check_friend_requests', {sitename: sitename, requests: data.Items[0].friend_requests.values, logged_in: true, name: name});
-        //res.render('success', {sitename: sitename, success_msg: "test", logged_in: true, name: name});
+        res.render('check_friend_requests', {sitename: sitename, requests_in: data.Items[0].friend_requests_inbox.values, requests_out: data.Items[0].friend_requests_outbox.values logged_in: true, name: name});
         return;
-      //});
     }
   });
 });
@@ -289,7 +303,7 @@ app.post('/login', function(req,res){
   // Setup for our database queries
   var name = req.body.name.toLowerCase();
   var pass = req.body.password;
-  var return_page = req.body.page || "/dashboard";
+  var return_page = "/dashboard";
   
   // If they're already logged in, we want them to log out before logging in again.
   if(sess.name !== "" && sess.name !== undefined){

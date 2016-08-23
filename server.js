@@ -156,13 +156,13 @@ app.post('/add_friend', function(req,res){
         docClient.update(theirParams, function (err, data){
           if (err) {
             console.error("Database error: ", JSON.stringify(err, null, 2));
-            res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
+            res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database1.", return_page: return_page});
             return;
           } else {
             docClient.update(myParams, function (err, data){
               if (err) {
                 console.error("Database error: ", JSON.stringify(err, null, 2));
-                res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
+                res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database2.", return_page: return_page});
                 return;
               } else {
                 res.render('success', {sitename: sitename, success_msg: "Friend request sent!", return_page: return_page, logged_in: true, name: name});

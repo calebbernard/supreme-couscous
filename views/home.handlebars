@@ -1,25 +1,5 @@
 <h1>Welcome to {{sitename}}!</h1>
 
-<p>
-
-{{#if logged_in}}
-<form method="POST" action="logout">
-  Logged in as: {{name}}
-	<input type="hidden" name="page" value="/" />
-  <input type="submit" value="Logout" />
-</form>
-{{else}}
-<form method="POST" action="login">
-  <label for="name">Username:</label>
-  <input type="text" id="name" name="name" />
-  <label for="password">Password:</label>
-  <input type="password" id="password" name="password" />
-  <input type="hidden" name="page" value="/" />
-  <input type="submit" value="Login" />
-</form>
-{{/if}}
-</p>
-
 
 <br>
 

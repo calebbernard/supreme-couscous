@@ -42,18 +42,17 @@ app.post('/create_account', function(req,res){
   var name = req.body.name;
   var password = req.body.password;
   var return_page = req.body.page;
-  
+  // Make sure they are not already logged in.
+  if (sess.name !== "" && sess.name !== undefined) {
+    res.render('error', {error_msg: "Please log out before making a new account.", return_page: return_page, logged_in: true, name: name});
+    return;
   // Make sure the name and password were both entered.
-  if (!name || !password){
+  } else if (!name || !password){
     res.render('error', {error_msg: "One or more fields was left blank.", return_page: return_page});
     return;
-  
   // Make sure the password is long enough.
   } else if (password.length < password_min_length){
     res.render('error', {error_msg: "Your password must be at least " + password_min_length + " characters long.", return_page: return_page});
-    return;
-  } else if (sess.name !== "" && sess.name !== undefined) {
-    res.render('error', {error_msg: "Please log out before making a new account.", return_page: return_page});
     return;
   } else {
     

@@ -92,6 +92,7 @@ app.post('/profile', function(req,res){
 // Create a new account
 // NOTE: Later I should add an email field.
 app.post('/create_account', function(req,res){
+  var sess = req.session;
   var password_min_length = 5;
   var name = req.body.name;
   var password = req.body.password;

@@ -121,24 +121,24 @@ app.post('/add_friend', function(req,res){
   
   var theirParams = {
     TableName:'users',
-    Key: {'username': request.toString()},
+    Key: {'username': request},
     UpdateExpression : 'ADD #oldIds :newIds',
     ExpressionAttributeNames : {
       '#oldIds' : 'friend_request_inbox'
     },
     ExpressionAttributeValues : {
-      ':newIds' : docClient.createSet([name.toString()])
+      ':newIds' : docClient.createSet([name])
     }
   };
   var myParams = {
     TableName:'users',
-    Key: {'username': name.toString()},
+    Key: {'username': name},
     UpdateExpression : 'ADD #oldIds :newIds',
     ExpressionAttributeNames : {
       '#oldIds' : 'friend_request_outbox'
     },
     ExpressionAttributeValues : {
-      ':newIds' : docClient.createSet([request.toString()])
+      ':newIds' : docClient.createSet([request])
     }
   };
   
@@ -153,13 +153,13 @@ app.post('/add_friend', function(req,res){
         res.render('error', {sitename: sitename, error_msg: "That username was not found.", return_page: return_page});
         return;
       } else {
-        docClient.update(theirParams, function (err, data){
+        docClient.update(myParams, function (err, data){
           if (err) {
             console.error("Database error: ", JSON.stringify(err, null, 2));
             res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database1.", return_page: return_page});
             return;
           } else {
-            docClient.update(myParams, function (err, data){
+            docClient.update(theirParams, function (err, data){
               if (err) {
                 console.error("Database error: ", JSON.stringify(err, null, 2));
                 res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database2.", return_page: return_page});

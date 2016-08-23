@@ -121,24 +121,24 @@ app.post('/add_friend', function(req,res){
   
   var theirParams = {
     TableName:'users',
-    Key: {'username': request},
+    Key: {'username': request.toString()},
     UpdateExpression : 'ADD #oldIds :newIds',
     ExpressionAttributeNames : {
       '#oldIds' : 'friend_request_inbox'
     },
     ExpressionAttributeValues : {
-      ':newIds' : docClient.createSet([name])
+      ':newIds' : docClient.createSet([name.toString()])
     }
   };
   var myParams = {
     TableName:'users',
-    Key: {'username': name},
+    Key: {'username': name.toString()},
     UpdateExpression : 'ADD #oldIds :newIds',
     ExpressionAttributeNames : {
       '#oldIds' : 'friend_request_outbox'
     },
     ExpressionAttributeValues : {
-      ':newIds' : docClient.createSet([request])
+      ':newIds' : docClient.createSet([request.toString()])
     }
   };
   

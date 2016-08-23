@@ -262,10 +262,7 @@ app.post('/create_account', function(req,res){
 		  Item:{
 			  "username":name,
 			  "password":password,
-			  "salt":salt,
-			  "friend_request_inbox":[],
-			  "friend_request_outbox":[],
-			  "friends_list":[]
+			  "salt":salt
 		  }
 	  };
 	  

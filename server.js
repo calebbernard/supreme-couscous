@@ -186,7 +186,8 @@ app.get('/check_friend_requests', function(req,res){
       return;
     } else {
       //data.Items.forEach(function(item) {
-        res.render('/check_friend_requests', {sitename: sitename, requests: ["hi", "hello"], logged_in: true, name: name});
+        //res.render('/check_friend_requests', {sitename: sitename, requests: ["hi", "hello"], logged_in: true, name: name});
+        res.render('success', {sitename: sitename, success_msg: "test", logged_in: true, name: name});
         return;
       //});
     }

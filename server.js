@@ -23,11 +23,9 @@ var docClient = new AWS.DynamoDB.DocumentClient();
 var sess;
 
 var sitename = "Branches";
-console.log("here! 2");
 
 // Homepage
 app.get('/', function(req,res){
-  console.log("here! 1");
   sess = req.session;
   var logged_in, name;
   if(sess.name === "" || sess.name === undefined){
@@ -84,7 +82,7 @@ app.post('/dashboard', function(req,res){
     res.render('error', {sitename: sitename, error_msg: "You must be logged in before you can view your profile!", return_page: return_page});
     return;
   }
-  res.render('dashboard', {sitename: sitename, logged_in: true, name: name});
+  res.render('dashboard', {sitename: sitename, logged_in: true, name: name})
   return;
 });
 
@@ -111,7 +109,7 @@ app.post('/dashboard', function(req,res){
     res.render('error', {sitename: sitename, error_msg: "You must be logged in before you can view your profile!", return_page: return_page});
     return;
   }
-  res.render('dashboard', {sitename: sitename, logged_in: true, name: name});
+  res.render('dashboard', {sitename: sitename, logged_in: true, name: name})
   return;
 });
 
@@ -349,13 +347,10 @@ app.post("/delete_account", function(req,res){
 
 app.use(function(req,res){
 	res.render('404', {sitename: sitename});
-	return;
 });
 
 app.use(function(err,req,res,next){
-  console.log("here! bad");
 	res.render('500', {sitename: sitename});
-	return;
 });
 
 app.listen(app.get('port'), function(){

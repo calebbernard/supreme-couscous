@@ -8,16 +8,19 @@ var bodyParser = require('body-parser');
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 var session = require('express-session');
-app.use(session({secret: process.env.NODESECRET}));
+var secrets = require('./secret/keys.js')
+app.use(session({secret: secrets.secret}));
 var AWS = require('aws-sdk');
 var crypto = require('crypto');
 
 AWS.config.update({
 	region: "us-west-2",
 	endpoint: "https://dynamodb.us-west-2.amazonaws.com",
-	accessKeyId: process.env.ACCESS_KEY_ID,
-	secretAccessKey: process.env.ACCESS_KEY
+	accessKeyId: secrets.access_id,
+	secretAccessKey: secrets.access_key
 });
+
+console.log(secrets.secret);
 
 var docClient = new AWS.DynamoDB.DocumentClient();
 var sess;

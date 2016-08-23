@@ -170,7 +170,7 @@ app.post('/add_friend', function(req,res){
             }
           });
         }
-      }
+      });
     }
   });
 });

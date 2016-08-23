@@ -24,16 +24,32 @@ var sess;
 
 var sitename = "Branches";
 
-
+// Homepage
 app.get('/', function(req,res){
   sess = req.session;
+  var logged_in, name;
   if(sess.name === "" || sess.name === undefined){
-		res.render('home', {sitename: sitename, logged_in_as: "Not logged in"});
-		return;
-	} else {
-	  res.render('home', {sitename: sitename, logged_in: true, name: sess.name});
-	}
+    logged_in = false;
+  } else {
+    logged_in = true;
+  }
+  res.render('home', {sitename: sitename, logged_in: logged_in, name: sess.name});
+  return;
 });
+
+// Profile page
+app.get('/', function(req,res){
+  sess = req.session;
+  var logged_in, name;
+  if(sess.name === "" || sess.name === undefined){
+    logged_in = false;
+  } else {
+    logged_in = true;
+  }
+  res.render('profile', {sitename: sitename, logged_in: logged_in, name: sess.name});
+  return;
+});
+
 
 // Create a new account
 // NOTE: Later I should add an email field.

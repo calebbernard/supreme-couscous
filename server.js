@@ -52,6 +52,9 @@ app.post('/create_account', function(req,res){
   } else if (password.length < password_min_length){
     res.render('error', {error_msg: "Your password must be at least " + password_min_length + " characters long.", return_page: return_page});
     return;
+  } else if (sess.name !== "" && sess.name !== undefined) {
+    res.render('error', {error_msg: "Please log out before making a new account.", return_page: return_page});
+    return;
   } else {
     
     // Generate a 16-byte ASCII salt.
@@ -100,7 +103,8 @@ app.post('/create_account', function(req,res){
 		          return;
     	      } else {
               console.log("Added item:", JSON.stringify(data, null, 2));
-              res.render('success', {success_msg: "Account created successfully!", return_page: return_page});
+              sess.name = name;
+              res.render('success', {success_msg: "Account created successfully!", return_page: return_page, logged_in: true, name: name});
               return;
     	      }
           });
@@ -118,7 +122,7 @@ app.post('/profile', function(req,res){
     res.render('error', {error_msg: "You must be logged in before you can view your profile!", return_page: return_page});
     return;
   }
-  res.render('profile', {logged_in: true, username: name})
+  res.render('profile', {logged_in: true, name: name})
   
 });
 
@@ -182,8 +186,7 @@ app.post('/login', function(req,res){
 		        var hashedPassword = hash.digest('hex');
 			      if (hashedPassword == data.Item.password){
 				      sess.name = name;
-				      console.log("Logged in as " + sess.name);
-				      res.render('success', {success_msg: "Logged in successfully! logged in as: " + sess.name, return_page: return_page});
+				      res.render('success', {success_msg: "Logged in successfully! logged in as: " + sess.name, return_page: return_page, logged_in: true, name: name});
 				      return;
 			      } else {
 				      res.render('error', {error_msg: "Wrong credentials! Please try again.", return_page: return_page});
@@ -201,13 +204,13 @@ app.post("/logout", function(req,res){
 	sess = req.session;
 	var return_page = req.body.page;
 	if (sess.name === "" || sess.name === undefined) {
-	  res.render('success', {success_msg: "You were already not logged in.", return_page: return_page});
+	  res.render('success', {success_msg: "You were already not logged in.", return_page: return_page, logged_in: false});
 	  return;
 	} else {
 	  var prev_name = sess.name;
 	  sess.name = "";
 	  console.log("logged out of " + prev_name);
-	  res.render('success', {success_msg: "Logged out of " + prev_name + " successfully!", return_page: return_page});
+	  res.render('success', {success_msg: "Logged out of " + prev_name + " successfully!", return_page: return_page, logged_in: false});
 	  return;
 	}
 });

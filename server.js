@@ -185,6 +185,9 @@ app.get('/check_friend_requests', function(req,res){
       res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
       return;
     } else {
+      data.Items.forEach(function(item) {
+            console.log(" -", item.friend_requests);
+        });
       res.render('/check_friend_requests', {sitename: sitename, requests: data.Items.friend_requests, logged_in: true, name: name});
       return;
     }

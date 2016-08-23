@@ -2,8 +2,9 @@
 
 <p>
 
+{{#if logged_in}}
 {{logged_in_as}}
-
+{{/if}}
 </p>
 
 
@@ -33,8 +34,11 @@
 
 <br>
 
+
+{{#if logged_in}}
 <form method="POST" action="logout">
   <label for="logout">Logout:</label>
 	<input type="hidden" name="page" value="/" />
   <input type="submit" id="logout" />
 </form>
+{{/if}}

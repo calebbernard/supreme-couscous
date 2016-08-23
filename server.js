@@ -31,7 +31,7 @@ app.get('/', function(req,res){
 		res.render('home', {sitename: sitename, logged_in_as: "Not logged in"});
 		return;
 	} else {
-	  res.render('home', {sitename: sitename, logged_in_as: "Logged in as: " + sess.name});
+	  res.render('home', {sitename: sitename, logged_in: true, logged_in_as: "Logged in as: " + sess.name});
 	}
 });
 

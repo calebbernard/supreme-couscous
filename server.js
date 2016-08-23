@@ -40,9 +40,12 @@ app.get('/', function(req,res){
 // Profile page
 app.get('/profile', function(req,res){
   sess = req.session;
+  var return_page = "/";
   var logged_in, name;
   if(sess.name === "" || sess.name === undefined){
     logged_in = false;
+    res.render('error', {error_msg: "Must be logged in to view profile!", return_page: return_page});
+    return;
   } else {
     logged_in = true;
   }

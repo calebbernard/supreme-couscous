@@ -113,8 +113,13 @@ app.post('/add_friend', function(req,res){
     res.render('error', {sitename: sitename, error_msg: "You must be logged in before you can add a friend!", return_page: return_page});
     return;
   }
+  var checkName = {
+    TableName:'users',
+    Key:{'username':request}
+  };
+  
   var params = {
-    TableName : 'users',
+    TableName:'users',
     Key: {'username': request},
     UpdateExpression : 'ADD #oldIds :newIds',
     ExpressionAttributeNames : {
@@ -124,7 +129,31 @@ app.post('/add_friend', function(req,res){
       ':newIds' : docClient.createSet([name])
     }
   };
-  docClient.update(params, callback);
+  
+  // First, make sure the given username exists.
+  docClient.query(checkName, function(err,data) {
+    if (err) {
+      console.error("Database error: ", JSON.stringify(err, null, 2));
+      res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
+      return;
+    } else {
+      if (data.Count === 0) {
+        res.render('error', {sitename: sitename, error_msg: "That username was not found.", return_page: return_page});
+        return;
+      } else {
+        docClient.update(params, function (err, data){
+          if (err) {
+            console.error("Database error: ", JSON.stringify(err, null, 2));
+            res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
+            return;
+          } else {
+            res.render('success', {sitename: sitename, success_msg: "Friend request sent!", return_page: return_page, logged_in: true, name: name});
+            return;
+          }
+        });
+      }
+    }
+  });
 });
 
 
@@ -222,7 +251,7 @@ app.post('/login', function(req,res){
   // Setup for our database queries
   var name = req.body.name.toLowerCase();
   var pass = req.body.password;
-  var return_page = req.body.page || "/";
+  var return_page = req.body.page || "/dashboard";
   
   // If they're already logged in, we want them to log out before logging in again.
   if(sess.name !== "" && sess.name !== undefined){

@@ -349,11 +349,13 @@ app.post("/delete_account", function(req,res){
 
 app.use(function(req,res){
 	res.render('404', {sitename: sitename});
+	return;
 });
 
 app.use(function(err,req,res,next){
   console.log("here! bad");
 	res.render('500', {sitename: sitename});
+	return;
 });
 
 app.listen(app.get('port'), function(){

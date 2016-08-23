@@ -38,7 +38,7 @@ app.get('/', function(req,res){
 });
 
 // Profile page
-app.get('/', function(req,res){
+app.get('/profile', function(req,res){
   sess = req.session;
   var logged_in, name;
   if(sess.name === "" || sess.name === undefined){

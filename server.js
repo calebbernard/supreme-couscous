@@ -8,7 +8,7 @@ var bodyParser = require('body-parser');
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 var session = require('express-session');
-var secrets = require('./secret/keys.js')
+var secrets = require('./secret/keys.js');
 app.use(session({secret: secrets.secret}));
 var AWS = require('aws-sdk');
 var crypto = require('crypto');
@@ -83,7 +83,7 @@ app.post('/dashboard', function(req,res){
     res.render('error', {sitename: sitename, error_msg: "You must be logged in before you can view your profile!", return_page: return_page});
     return;
   }
-  res.render('dashboard', {sitename: sitename, logged_in: true, name: name})
+  res.render('dashboard', {sitename: sitename, logged_in: true, name: name});
   return;
 });
 
@@ -169,7 +169,7 @@ app.post('/add_friend', function(req,res){
               return;
             }
           });
-        });
+        }
       }
     }
   });

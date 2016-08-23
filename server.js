@@ -202,7 +202,9 @@ app.get('/check_friend_requests', function(req,res){
       res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
       return;
     } else {
-        res.render('check_friend_requests', {sitename: sitename, requests_in: data.Items[0].friend_request_inbox.values, requests_out: data.Items[0].friend_request_outbox.values, logged_in: true, name: name});
+      var inbox = data.Items[0].friend_request_inbox.values || [];
+      var outbox = data.Items[0].friend_request_outbox.values || [];
+        res.render('check_friend_requests', {sitename: sitename, requests_in: inbox, requests_out: outbox, logged_in: true, name: name});
         return;
     }
   });

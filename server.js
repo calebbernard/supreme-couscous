@@ -185,10 +185,10 @@ app.get('/check_friend_requests', function(req,res){
       res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
       return;
     } else {
-      data.Items.forEach(function(item) {
-        res.render('/check_friend_requests', {sitename: sitename, requests: item.friend_requests, logged_in: true, name: name});
+      //data.Items.forEach(function(item) {
+        res.render('/check_friend_requests', {sitename: sitename, requests: ["hi", "hello"], logged_in: true, name: name});
         return;
-      });
+      //});
     }
   });
 });

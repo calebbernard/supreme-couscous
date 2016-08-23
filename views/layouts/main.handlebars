@@ -9,23 +9,29 @@
 </style>
 <body style="background-color:#fff8ce;">
 <div class="container-fluid" style="background-color:#c29bff;">
-  <h3><a style="color: black;" href="/">{{sitename}}</a></h3>
-{{#if logged_in}}
-<form method="POST" action="logout">
-  Logged in as: <a href="/profile">{{name}}</a>.
-	<input type="hidden" name="page" value="/" />
-  <input type="submit" class="btn btn-default" value="Logout" />
-</form>
-{{else}}
-<form method="POST" action="login">
-  <label for="name">Username:</label>
-  <input type="text" id="name" name="name" />
-  <label for="password">Password:</label>
-  <input type="password" id="password" name="password" />
-  <input type="hidden" name="page" value="/" />
-  <input type="submit" class="btn btn-default" value="Login" />
-</form>
-{{/if}}
+  <div class="row">
+    <div class="col-md-6">
+      <h2><a style="color: black;" href="/">{{sitename}}</a></h2>
+    </div>
+    <div class="col-md-6">
+      {{#if logged_in}}
+        <form method="POST" action="logout">
+          Logged in as: <a href="/profile">{{name}}</a>.
+        	<input type="hidden" name="page" value="/" />
+          <input type="submit" class="btn btn-default" value="Logout" />
+        </form>
+        {{else}}
+        <form method="POST" action="login">
+          <label for="name">Username:</label>
+          <input type="text" id="name" name="name" />
+          <label for="password">Password:</label>
+          <input type="password" id="password" name="password" />
+          <input type="hidden" name="page" value="/" />
+          <input type="submit" class="btn btn-default" value="Login" />
+        </form>
+      {{/if}}
+    </div>
+  </div>
 </div>
 {{{body}}}
 </body>

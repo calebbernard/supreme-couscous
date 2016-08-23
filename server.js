@@ -172,12 +172,12 @@ app.get('/check_friend_requests', function(req,res){
   }
   
   var params = {
-			TableName: "users",
-			KeyExpression: "username = :name",
-			ExpressionAttributeValues: {
-				":name":name
-			}
-		}
+    TableName:'users',
+    KeyConditionExpression: "username = :name",
+      ExpressionAttributeValues: {
+        ":name":name
+      }
+  };
   
   docClient.query(params, function (err, data){
     if (err) {

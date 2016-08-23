@@ -82,7 +82,7 @@ app.post('/dashboard', function(req,res){
     res.render('error', {sitename: sitename, error_msg: "You must be logged in before you can view your profile!", return_page: return_page});
     return;
   }
-  res.render('dashboard', {sitename: sitename, logged_in: true, name: name})
+  res.render('dashboard', {sitename: sitename, logged_in: true, name: name});
   return;
 });
 
@@ -109,7 +109,7 @@ app.post('/dashboard', function(req,res){
     res.render('error', {sitename: sitename, error_msg: "You must be logged in before you can view your profile!", return_page: return_page});
     return;
   }
-  res.render('dashboard', {sitename: sitename, logged_in: true, name: name})
+  res.render('dashboard', {sitename: sitename, logged_in: true, name: name});
   return;
 });
 

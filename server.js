@@ -94,7 +94,7 @@ app.post('/profile', function(req,res){
 app.post('/create_account', function(req,res){
   var sess = req.session;
   var password_min_length = 5;
-  var name = req.body.name;
+  var name = req.body.name.toLowerCase();
   var password = req.body.password;
   var return_page = req.body.page || "/";
   // Make sure they are not already logged in.
@@ -174,7 +174,7 @@ app.post('/login', function(req,res){
   var sess = req.session;
 
   // Setup for our database queries
-  var name = req.body.name;
+  var name = req.body.name.toLowerCase();
   var pass = req.body.password;
   var return_page = req.body.page || "/";
   

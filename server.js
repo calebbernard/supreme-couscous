@@ -352,6 +352,7 @@ app.use(function(req,res){
 });
 
 app.use(function(err,req,res,next){
+  console.log("here! bad");
 	res.render('500', {sitename: sitename});
 });
 

@@ -308,8 +308,9 @@ app.post("/delete_account", function(req,res){
 				        if (err){
 				          res.render('error', {sitename: sitename, error_msg: "Database error - could not delete account.", return_page: return_page, logged_in: true, name: sess.name});
 				        } else {
-				        res.render('success', {sitename: sitename, success_msg: "Account deleted.", return_page: "/", logged_in: false});
-				        return;
+				          res.render('success', {sitename: sitename, success_msg: "Account deleted.", return_page: "/", logged_in: false});
+				          return;
+				        }
 				      });
 				      
 			      } else {

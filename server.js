@@ -100,20 +100,31 @@ app.get('/add_friend', function(req,res){
     return;
   } else {
     logged_in = true;
-    res.render('dashboard', {sitename: sitename, logged_in: logged_in, name: sess.name});
+    res.render('add_friend', {sitename: sitename, logged_in: logged_in, name: sess.name});
     return;
   }
 });
-app.post('/dashboard', function(req,res){
+app.post('/add_friend', function(req,res){
   var sess = req.session;
   var name = sess.name;
+  var request = req.body.friend_req;
   var return_page = req.body.page || "/";
   if (name === "" || name === undefined) {
-    res.render('error', {sitename: sitename, error_msg: "You must be logged in before you can view your profile!", return_page: return_page});
+    res.render('error', {sitename: sitename, error_msg: "You must be logged in before you can add a friend!", return_page: return_page});
     return;
   }
-  res.render('dashboard', {sitename: sitename, logged_in: true, name: name})
-  return;
+  var params = {
+    TableName : 'users',
+    Key: {'username': request},
+    UpdateExpression : 'ADD #oldIds :newIds',
+    ExpressionAttributeNames : {
+      '#oldIds' : 'ids'
+    },
+    ExpressionAttributeValues : {
+      ':newIds' : docClient.createSet([name])
+    }
+  };
+  docClient.update(params, callback);
 });
 
 

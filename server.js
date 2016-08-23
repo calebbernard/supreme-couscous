@@ -277,7 +277,8 @@ app.get("/delete_account", function(req,res){
 app.post("/delete_account", function(req,res){
   sess = req.session;
   var return_page = "/";
-  var logged_in, name;
+  var logged_in;
+  var name = sess.name;
   var pass = req.body.password;
   if(sess.name === "" || sess.name === undefined){
     logged_in = false;

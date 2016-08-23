@@ -23,9 +23,11 @@ var docClient = new AWS.DynamoDB.DocumentClient();
 var sess;
 
 var sitename = "Branches";
+console.log("here! 2");
 
 // Homepage
 app.get('/', function(req,res){
+  console.log("here! 1");
   sess = req.session;
   var logged_in, name;
   if(sess.name === "" || sess.name === undefined){

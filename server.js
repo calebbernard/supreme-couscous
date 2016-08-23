@@ -124,7 +124,7 @@ app.post('/add_friend', function(req,res){
     Key: {'username': request},
     UpdateExpression : 'ADD #oldIds :newIds',
     ExpressionAttributeNames : {
-      '#oldIds' : 'friend_requests_inbox'
+      '#oldIds' : 'friend_request_inbox'
     },
     ExpressionAttributeValues : {
       ':newIds' : docClient.createSet([name])
@@ -135,7 +135,7 @@ app.post('/add_friend', function(req,res){
     Key: {'username': name},
     UpdateExpression : 'ADD #oldIds :newIds',
     ExpressionAttributeNames : {
-      '#oldIds' : 'friend_requests_outbox'
+      '#oldIds' : 'friend_request_outbox'
     },
     ExpressionAttributeValues : {
       ':newIds' : docClient.createSet([request])
@@ -159,7 +159,7 @@ app.post('/add_friend', function(req,res){
             res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
             return;
           } else {
-            docClient.update(theirParams, function (err, data){
+            docClient.update(myParams, function (err, data){
               if (err) {
                 console.error("Database error: ", JSON.stringify(err, null, 2));
                 res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
@@ -264,7 +264,8 @@ app.post('/create_account', function(req,res){
 			  "password":password,
 			  "salt":salt,
 			  "friend_request_inbox":[],
-			  "friend_request_outbox":[]
+			  "friend_request_outbox":[],
+			  "friends_list":[]
 		  }
 	  };
 	  

@@ -276,7 +276,7 @@ app.get("/delete_account", function(req,res){
 // Also to consider: What to do about this user's shared content?
 app.post("/delete_account", function(req,res){
   sess = req.session;
-  var return_page = "/";
+  var return_page = req.body.page || "/";
   var logged_in;
   var name = sess.name;
   var pass = req.body.password;
@@ -309,6 +309,7 @@ app.post("/delete_account", function(req,res){
 				        if (err){
 				          res.render('error', {sitename: sitename, error_msg: "Database error - could not delete account.", return_page: return_page, logged_in: true, name: sess.name});
 				        } else {
+				          sess.name="";
 				          res.render('success', {sitename: sitename, success_msg: "Account deleted.", return_page: "/", logged_in: false});
 				          return;
 				        }

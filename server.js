@@ -285,13 +285,13 @@ app.post('/cancel_friend_request', function(req,res) {
                 ':newIds' : docClient.createSet([name])
               }
             };
-            docClient.update(myParams, function(err.data){
+            docClient.update(myParams, function(err,data){
               if (err){
                 console.error("Database error: ", JSON.stringify(err, null, 2));
                 res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
                 return;
               } else {
-                docClient.update(theirParams, function(err.data){
+                docClient.update(theirParams, function(err,data){
                   if (err){
                     console.error("Database error: ", JSON.stringify(err, null, 2));
                     res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});

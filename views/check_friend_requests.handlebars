@@ -8,12 +8,14 @@
     <td>
       <form method="POST" action="/accept_friend_request">
         <input type="hidden" name="who_to_accept" value="{{this}}" />
+        <input type="hidden" name="page" value="/check_friend_requests" />
         <input type="submit" class="btn btn-success" value="Accept" />
       </form>
     </td>
     <td>
       <form method="POST" action="/reject_friend_request">
         <input type="hidden" name="who_to_reject" value="{{this}}" />
+        <input type="hidden" name="page" value="/check_friend_requests" />
         <input type="submit" class="btn btn-danger" value="Reject" />
       </form>
     </td>
@@ -32,6 +34,7 @@
     <td>
       <form method="POST" action="/cancel_friend_request">
         <input type="hidden" name="who_to_cancel" value="{{this}}" />
+        <input type="hidden" name="page" value="/check_friend_requests" />
         <input type="submit" class="btn btn-warning" value="Cancel" />
       </form>
     </td>

@@ -23,7 +23,7 @@ AWS.config.update({
 var docClient = new AWS.DynamoDB.DocumentClient();
 var sess;
 
-var sitename = "Branches";
+var sitename = "Calebville";
 
 // Homepage
 app.get('/', function(req,res){
@@ -48,6 +48,8 @@ app.post('/', function(req,res){
   res.render('home', {sitename: sitename, logged_in: logged_in, name: sess.name});
   return;
 });
+
+// Create Account Page
 app.get('/create_account', function(req,res){
   sess = req.session;
   var logged_in, name;
@@ -102,6 +104,8 @@ app.get('/add_friend', function(req,res){
     return;
   }
 });
+
+// Sending a friend request
 app.post('/add_friend', function(req,res){
   var sess = req.session;
   var name = sess.name;
@@ -176,7 +180,7 @@ app.post('/add_friend', function(req,res){
   });
 });
 
-
+// Friend Request Management Page
 app.get('/check_friend_requests', function(req,res){
   sess = req.session;
   var return_page = "/dashboard";
@@ -232,7 +236,80 @@ app.get('/check_friend_requests', function(req,res){
   });
 });
 
-
+// Cancel an outstanding friend request
+app.post('/cancel_friend_request', function(req,res) {
+  var sess = req.session;
+  var request = req.body.who_to_cancel;
+  var name = sess.name;
+  var return_page = req.body.return_page || "/";
+  var params = {
+    TableName = "users",
+    KeyConditionExpression: "username = :user";
+    ExpressionAttributeValues = {
+      ":user":name
+    }
+  }
+  docClient.query(params, function(err,data) {
+    if (err){
+      console.error("Database error: ", JSON.stringify(err, null, 2));
+      res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
+      return;
+    } else {
+      if (!data.Items[0].friend_request_outbox.values) {
+        res.render('error', {sitename: sitename, error_msg: "You have no requests to cancel.", return_page: return_page});
+        return;
+      } else {
+        for (x in data.Items[0].friend_request_outbox.values) {
+          if (x == request) {
+            // Remove the user from the friend request outbox AND remove this user from their inbox.
+            
+            var myParams = {
+              TableName:'users',
+              Key: {'username': name},
+              UpdateExpression : 'remove #oldIds :newIds',
+              ExpressionAttributeNames : {
+                '#oldIds' : 'friend_request_outbox'
+              },
+              ExpressionAttributeValues : {
+                ':newIds' : docClient.createSet([request])
+              }
+            };
+            var theirParams = {
+              TableName:'users',
+              Key: {'username': request},
+              UpdateExpression : 'remove #oldIds :newIds',
+              ExpressionAttributeNames : {
+                '#oldIds' : 'friend_request_inbox'
+              },
+              ExpressionAttributeValues : {
+                ':newIds' : docClient.createSet([name])
+              }
+            };
+            docClient.update(myParams, function(err.data){
+              if (err){
+                console.error("Database error: ", JSON.stringify(err, null, 2));
+                res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
+                return;
+              } else {
+                docClient.update(theirParams, function(err.data){
+                  if (err){
+                    console.error("Database error: ", JSON.stringify(err, null, 2));
+                    res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
+                    return;
+                  } else {
+                    res.render('success', {sitename: sitename, success_msg: "Friend request canceled successfully.", return_page: return_page});
+                    return;
+                  }
+                });
+              }
+            });
+          }
+        }
+      }
+    }
+  });
+  
+});
 
 // Create a new account
 // NOTE: Later I should add an email field.

@@ -261,7 +261,7 @@ app.post('/cancel_friend_request', function(req,res) {
             var myParams = {
               TableName:'users',
               Key: {'username': name},
-              UpdateExpression: 'set #attribute :values',
+              UpdateExpression: 'set #attribute =:values',
               ExpressionAttributeNames : {
                 '#attribute': 'friend_request_outbox'
               },

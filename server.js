@@ -204,7 +204,7 @@ app.get('/check_friend_requests', function(req,res){
     } else {
       var inbox = data.Items[0].friend_request_outbox;
       var outbox = data.Items[0].friend_request_outbox;
-      console.log("data.Items[0]: " + data.Items[0]);
+      console.log("data.Items[0]: " + JSON.stringify(data.Items[0], null, 2));
       if (inbox && outbox) {
         console.log("inbox: " + inbox);
         console.log("outbox: " + outbox);

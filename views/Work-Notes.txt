@@ -1,7 +1,11 @@
-To do:
+Social Features Checklist:
 
-- Add maximum username length
-- Restrict username to alphanumeric characters
+
+- Making an account:
+  - Add maximum username length
+  - Make sure it only contains the characters you want
+
+
 - When the user logs in, redirect to dashboard instead of homepage
 - Add Groups system
 - Friends and Solo are special, built-in groups
@@ -13,3 +17,9 @@ To do:
 - Blocking a user (think about how this should be implemented)
 - Captcha and such for account creation, maybe login too
 - Add email for password regen options
+
+
+- Friend request stuff:
+  - Can't request someone who's already your friend
+  - Can't request someone who's already in your request inbox OR outbox
+  - Can't request yourself

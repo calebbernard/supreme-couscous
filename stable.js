@@ -8,7 +8,7 @@ var bodyParser = require('body-parser');
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 var session = require('express-session');
-var secrets = require('./secret/keys.js')
+var secrets = require('./secret/keys.js');
 app.use(session({secret: secrets.secret}));
 var AWS = require('aws-sdk');
 var crypto = require('crypto');
@@ -19,8 +19,6 @@ AWS.config.update({
 	accessKeyId: secrets.access_id,
 	secretAccessKey: secrets.access_key
 });
-
-console.log(secrets.secret);
 
 var docClient = new AWS.DynamoDB.DocumentClient();
 var sess;
@@ -85,7 +83,7 @@ app.post('/dashboard', function(req,res){
     res.render('error', {sitename: sitename, error_msg: "You must be logged in before you can view your profile!", return_page: return_page});
     return;
   }
-  res.render('dashboard', {sitename: sitename, logged_in: true, name: name})
+  res.render('dashboard', {sitename: sitename, logged_in: true, name: name});
   return;
 });
 
@@ -100,21 +98,140 @@ app.get('/add_friend', function(req,res){
     return;
   } else {
     logged_in = true;
-    res.render('dashboard', {sitename: sitename, logged_in: logged_in, name: sess.name});
+    res.render('add_friend', {sitename: sitename, logged_in: logged_in, name: sess.name});
     return;
   }
 });
-app.post('/dashboard', function(req,res){
+app.post('/add_friend', function(req,res){
   var sess = req.session;
   var name = sess.name;
+  var request = req.body.friend_req;
   var return_page = req.body.page || "/";
   if (name === "" || name === undefined) {
-    res.render('error', {sitename: sitename, error_msg: "You must be logged in before you can view your profile!", return_page: return_page});
+    res.render('error', {sitename: sitename, error_msg: "You must be logged in before you can add a friend!", return_page: return_page});
     return;
   }
-  res.render('dashboard', {sitename: sitename, logged_in: true, name: name})
-  return;
+  var checkName = {
+    TableName:'users',
+    KeyConditionExpression: "username = :name",
+      ExpressionAttributeValues: {
+        ":name":request
+      }
+  };
+  
+  var theirParams = {
+    TableName:'users',
+    Key: {'username': request},
+    UpdateExpression : 'ADD #oldIds :newIds',
+    ExpressionAttributeNames : {
+      '#oldIds' : 'friend_request_inbox'
+    },
+    ExpressionAttributeValues : {
+      ':newIds' : docClient.createSet([name])
+    }
+  };
+  var myParams = {
+    TableName:'users',
+    Key: {'username': name},
+    UpdateExpression : 'ADD #oldIds :newIds',
+    ExpressionAttributeNames : {
+      '#oldIds' : 'friend_request_outbox'
+    },
+    ExpressionAttributeValues : {
+      ':newIds' : docClient.createSet([request])
+    }
+  };
+  
+  // First, make sure the given username exists.
+  docClient.query(checkName, function(err,data) {
+    if (err) {
+      console.error("Database error: ", JSON.stringify(err, null, 2));
+      res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
+      return;
+    } else {
+      if (data.Count === 0) {
+        res.render('error', {sitename: sitename, error_msg: "That username was not found.", return_page: return_page});
+        return;
+      } else {
+        docClient.update(myParams, function (err, data){
+          if (err) {
+            console.error("Database error: ", JSON.stringify(err, null, 2));
+            res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database1.", return_page: return_page});
+            return;
+          } else {
+            docClient.update(theirParams, function (err, data){
+              if (err) {
+                console.error("Database error: ", JSON.stringify(err, null, 2));
+                res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database2.", return_page: return_page});
+                return;
+              } else {
+                res.render('success', {sitename: sitename, success_msg: "Friend request sent!", return_page: return_page, logged_in: true, name: name});
+                return;
+              }
+            });
+          }
+        });
+      }
+    }
+  });
 });
+
+
+app.get('/check_friend_requests', function(req,res){
+  sess = req.session;
+  var return_page = "/dashboard";
+  var logged_in;
+  var name = sess.name;
+  if(sess.name === "" || sess.name === undefined){
+    logged_in = false;
+    res.render('error', {sitename: sitename, error_msg: "Must be logged in to manage your friend requests!", return_page: return_page});
+    return;
+  }
+  
+  var params = {
+    TableName:'users',
+    KeyConditionExpression: "username = :name",
+      ExpressionAttributeValues: {
+        ":name":name
+      }
+  };
+  
+  docClient.query(params, function (err, data){
+    if (err) {
+      console.error("Database error: ", JSON.stringify(err, null, 2));
+      res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
+      return;
+    } else {
+      var inbox = data.Items[0].friend_request_inbox;
+      var outbox = data.Items[0].friend_request_outbox;
+      console.log("inbox: " + JSON.stringify(inbox, null, 2));
+      console.log("outbox: " + JSON.stringify(outbox, null, 2));
+      if (inbox && outbox) {
+        console.log("inbox: " + inbox);
+        console.log("outbox: " + outbox);
+        res.render('check_friend_requests', {sitename: sitename, requests_in: inbox.values, requests_out: outbox.values, logged_in: true, name: name});
+        return;
+      } else if (inbox) {
+        console.log("inbox: " + inbox);
+        res.render('check_friend_requests', {sitename: sitename, requests_in: inbox.values, requests_out: [], logged_in: true, name: name});
+        return;
+      } else if (outbox) {
+        console.log("outbox: " + outbox);
+        res.render('check_friend_requests', {sitename: sitename, requests_in: [], requests_out: outbox.values, logged_in: true, name: name});
+        return;
+      } else {
+        console.log("Default");
+        res.render('check_friend_requests', {sitename: sitename, requests_in: [], requests_out: [], logged_in: true, name: name});
+        return;
+      }
+      console.log(inbox);
+      console.log(outbox);
+      
+      return;
+    }
+  });
+});
+
 
 
 // Create a new account
@@ -141,7 +258,7 @@ app.post('/create_account', function(req,res){
     return;
   // Make sure the username is not too long or short.
   } else if (name < 1 || name > username_max_length) {
-    res.render('error', {sitename: sitename, error_msg: "Username cannot be shorter than 1 or longer than " + username_max_length + "characters.", return_page: return_page});
+    res.render('error', {sitename: sitename, error_msg: "Username cannot be shorter than 1 or longer than " + username_max_length + " characters.", return_page: return_page});
     return;
   } else if (!pattern.test(name)) {
     res.render('error', {sitename: sitename, error_msg: "Username must only use alphanumeric characters.", return_page: return_page});
@@ -211,7 +328,7 @@ app.post('/login', function(req,res){
   // Setup for our database queries
   var name = req.body.name.toLowerCase();
   var pass = req.body.password;
-  var return_page = req.body.page || "/";
+  var return_page = "/dashboard";
   
   // If they're already logged in, we want them to log out before logging in again.
   if(sess.name !== "" && sess.name !== undefined){

@@ -218,6 +218,7 @@ app.get('/check_friend_requests', function(req,res){
         res.render('check_friend_requests', {sitename: sitename, requests_in: ["empty"], requests_out: outbox, logged_in: true, name: name});
         return;
       } else {
+        console.log("Default");
         res.render('check_friend_requests', {sitename: sitename, requests_in: "empty", requests_out: "empty", logged_in: true, name: name});
         return;
       }

@@ -208,30 +208,19 @@ app.get('/check_friend_requests', function(req,res){
     } else {
       var inbox = data.Items[0].friend_request_inbox;
       var outbox = data.Items[0].friend_request_outbox;
-      console.log("inbox: " + JSON.stringify(inbox, null, 2));
-      console.log("outbox: " + JSON.stringify(outbox, null, 2));
       if (inbox && outbox) {
-        console.log("inbox: " + inbox);
-        console.log("outbox: " + outbox);
         res.render('check_friend_requests', {sitename: sitename, requests_in: inbox.values, requests_out: outbox.values, logged_in: true, name: name});
         return;
       } else if (inbox) {
-        console.log("inbox: " + inbox);
         res.render('check_friend_requests', {sitename: sitename, requests_in: inbox.values, requests_out: [], logged_in: true, name: name});
         return;
       } else if (outbox) {
-        console.log("outbox: " + outbox);
         res.render('check_friend_requests', {sitename: sitename, requests_in: [], requests_out: outbox.values, logged_in: true, name: name});
         return;
       } else {
-        console.log("Default");
         res.render('check_friend_requests', {sitename: sitename, requests_in: [], requests_out: [], logged_in: true, name: name});
         return;
       }
-      console.log(inbox);
-      console.log(outbox);
-      
-      return;
     }
   });
 });

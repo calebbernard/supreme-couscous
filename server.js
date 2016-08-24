@@ -266,7 +266,7 @@ app.post('/cancel_friend_request', function(req,res) {
                 '#attribute': 'friend_request_outbox'
               },
               ExpressionAttributeValues: {
-                'newlist': newMyRequestsOutbox
+                ':values': newMyRequestsOutbox
               }
             };
             var theirParams = {

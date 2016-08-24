@@ -238,20 +238,23 @@ app.post('/cancel_friend_request', function(req,res) {
       ":user":name
     }
   }
+  console.log("Here1");
   docClient.query(params, function(err,data) {
     if (err){
       console.error("Database error: ", JSON.stringify(err, null, 2));
       res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
       return;
     } else {
+      console.log("HEre2");
       if (!data.Items[0].friend_request_outbox.values) {
         res.render('error', {sitename: sitename, error_msg: "You have no requests to cancel.", return_page: return_page});
         return;
       } else {
+        console.log("Here3");
         for (x in data.Items[0].friend_request_outbox.values) {
           if (x == request) {
             // Remove the user from the friend request outbox AND remove this user from their inbox.
-            
+            console.log("Here4");
             var myParams = {
               TableName:'users',
               Key: {'username': name},
@@ -275,12 +278,14 @@ app.post('/cancel_friend_request', function(req,res) {
               }
             };
             docClient.update(myParams, function(err,data){
+              console.log("heree5");
               if (err){
                 console.error("Database error: ", JSON.stringify(err, null, 2));
                 res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
                 return;
               } else {
                 docClient.update(theirParams, function(err,data){
+                  console.log("Here6");
                   if (err){
                     console.error("Database error: ", JSON.stringify(err, null, 2));
                     res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});

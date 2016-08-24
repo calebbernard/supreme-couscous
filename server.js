@@ -252,8 +252,8 @@ app.post('/cancel_friend_request', function(req,res) {
       } else {
         console.log("Here3");
         for (x in data.Items[0].friend_request_outbox.values) {
-          console.log(x);
-          if (x == request) {
+          console.log(x.value);
+          if (x.value == request) {
             // Remove the user from the friend request outbox AND remove this user from their inbox.
             console.log("Here4");
             var myParams = {
@@ -299,6 +299,8 @@ app.post('/cancel_friend_request', function(req,res) {
               }
             });
           }
+          res.render('error', {sitename: sitename, error_msg: "No friend request to that user could be found.", return_page: return_page});
+          return;
         }
       }
     }

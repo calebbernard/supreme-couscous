@@ -251,6 +251,7 @@ app.post('/cancel_friend_request', function(req,res) {
         return;
       } else {
         console.log("Here3");
+        console.log(data.Items[0].friend_request_outbox);
         for (x in data.Items[0].friend_request_outbox.values) {
           console.log(x);
           if (x.value == request) {

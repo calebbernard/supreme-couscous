@@ -204,19 +204,19 @@ app.get('/check_friend_requests', function(req,res){
     } else {
       var inbox = data.Items[0].friend_request_outbox;
       var outbox = data.Items[0].friend_request_outbox;
-      console.log("data.Items[0]: " + JSON.stringify(data.Items[0], null, 2));
+      console.log("inbox: " + JSON.stringify(inbox, null, 2));
       if (inbox && outbox) {
         console.log("inbox: " + inbox);
         console.log("outbox: " + outbox);
-        res.render('check_friend_requests', {sitename: sitename, requests_in: inbox, requests_out: outbox, logged_in: true, name: name});
+        res.render('check_friend_requests', {sitename: sitename, requests_in: inbox.values, requests_out: outbox.values, logged_in: true, name: name});
         return;
       } else if (inbox) {
         console.log("inbox: " + inbox);
-        res.render('check_friend_requests', {sitename: sitename, requests_in: inbox, requests_out: ["empty"], logged_in: true, name: name});
+        res.render('check_friend_requests', {sitename: sitename, requests_in: inbox.values, requests_out: ["empty"], logged_in: true, name: name});
         return;
       } else if (outbox) {
         console.log("outbox: " + outbox);
-        res.render('check_friend_requests', {sitename: sitename, requests_in: ["empty"], requests_out: outbox, logged_in: true, name: name});
+        res.render('check_friend_requests', {sitename: sitename, requests_in: ["empty"], requests_out: outbox.values, logged_in: true, name: name});
         return;
       } else {
         console.log("Default");

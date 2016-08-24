@@ -213,15 +213,15 @@ app.get('/check_friend_requests', function(req,res){
         return;
       } else if (inbox) {
         console.log("inbox: " + inbox);
-        res.render('check_friend_requests', {sitename: sitename, requests_in: inbox.values, requests_out: ["empty"], logged_in: true, name: name});
+        res.render('check_friend_requests', {sitename: sitename, requests_in: inbox.values, requests_out: [], logged_in: true, name: name});
         return;
       } else if (outbox) {
         console.log("outbox: " + outbox);
-        res.render('check_friend_requests', {sitename: sitename, requests_in: ["empty"], requests_out: outbox.values, logged_in: true, name: name});
+        res.render('check_friend_requests', {sitename: sitename, requests_in: [], requests_out: outbox.values, logged_in: true, name: name});
         return;
       } else {
         console.log("Default");
-        res.render('check_friend_requests', {sitename: sitename, requests_in: "empty", requests_out: "empty", logged_in: true, name: name});
+        res.render('check_friend_requests', {sitename: sitename, requests_in: [], requests_out: [], logged_in: true, name: name});
         return;
       }
       console.log(inbox);

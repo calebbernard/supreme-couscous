@@ -245,7 +245,7 @@ app.post('/cancel_friend_request', function(req,res) {
   var params = {
     TableName: "users",
     KeyConditionExpression: "username = :user",
-    ExpressionAttributeValues = {
+    ExpressionAttributeValues: {
       ":user":name
     }
   }

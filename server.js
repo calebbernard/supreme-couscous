@@ -204,8 +204,10 @@ app.get('/check_friend_requests', function(req,res){
     } else {
       var inbox = data.Items[0].friend_request_outbox || [];
       var outbox = data.Items[0].friend_request_outbox || [];
-        res.render('check_friend_requests', {sitename: sitename, requests_in: inbox, requests_out: outbox, logged_in: true, name: name});
-        return;
+      console.log(inbox);
+      console.log(outbox);
+      res.render('check_friend_requests', {sitename: sitename, requests_in: inbox, requests_out: outbox, logged_in: true, name: name});
+      return;
     }
   });
 });

@@ -260,23 +260,23 @@ app.post('/cancel_friend_request', function(req,res) {
             var myParams = {
               TableName:'users',
               Key: {'username': name},
-              UpdateExpression : 'remove #oldIds :newIds',
+              UpdateExpression: 'remove #attribute:index',
               ExpressionAttributeNames : {
-                '#oldIds' : 'friend_request_outbox'
+                '#attribute': 'friend_request_outbox'
               },
               ExpressionAttributeValues : {
-                ':newIds' : docClient.createSet([request])
+                ':index':x
               }
             };
             var theirParams = {
               TableName:'users',
               Key: {'username': request},
-              UpdateExpression : 'remove #oldIds :newIds',
+              UpdateExpression: 'remove #oldIds :newIds',
               ExpressionAttributeNames : {
-                '#oldIds' : 'friend_request_inbox'
+                '#oldIds': 'friend_request_inbox'
               },
               ExpressionAttributeValues : {
-                ':newIds' : docClient.createSet([name])
+                ':newIds': docClient.createSet([name])
               }
             };
             docClient.update(myParams, function(err,data){

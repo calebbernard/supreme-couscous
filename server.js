@@ -202,9 +202,10 @@ app.get('/check_friend_requests', function(req,res){
       res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
       return;
     } else {
-      var inbox = data.Items[0].friend_request_outbox;
+      var inbox = data.Items[0].friend_request_inbox;
       var outbox = data.Items[0].friend_request_outbox;
       console.log("inbox: " + JSON.stringify(inbox, null, 2));
+      console.log("outbox: " + JSON.stringify(outbox, null, 2));
       if (inbox && outbox) {
         console.log("inbox: " + inbox);
         console.log("outbox: " + outbox);

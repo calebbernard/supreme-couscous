@@ -7,13 +7,13 @@
     </td>
     <td>
       <form method="POST" action="/accept_friend_request">
-        <input type="hidden" name="who_to_accept" value="{{this.value}}" />
+        <input type="hidden" name="who_to_accept" value="{{this}}" />
         <input type="submit" class="btn btn-success" value="Accept" />
       </form>
     </td>
     <td>
       <form method="POST" action="/reject_friend_request">
-        <input type="hidden" name="who_to_reject" value="{{this.value}}" />
+        <input type="hidden" name="who_to_reject" value="{{this}}" />
         <input type="submit" class="btn btn-danger" value="Reject" />
       </form>
     </td>

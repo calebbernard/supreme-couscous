@@ -202,11 +202,24 @@ app.get('/check_friend_requests', function(req,res){
       res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
       return;
     } else {
-      var inbox = data.Items[0].friend_request_outbox || [];
-      var outbox = data.Items[0].friend_request_outbox || [];
+      var inbox = data.Items[0].friend_request_outbox;
+      var outbox = data.Items[0].friend_request_outbox;
+      if (inbox && outbox) {
+        res.render('check_friend_requests', {sitename: sitename, requests_in: inbox, requests_out: outbox, logged_in: true, name: name});
+        return;
+      } else if (inbox) {
+        res.render('check_friend_requests', {sitename: sitename, requests_in: inbox, requests_out: ["empty"], logged_in: true, name: name});
+        return;
+      } else if (outbox) {
+        res.render('check_friend_requests', {sitename: sitename, requests_in: ["empty"], requests_out: outbox, logged_in: true, name: name});
+        return;
+      } else {
+        res.render('check_friend_requests', {sitename: sitename, requests_in: "empty", requests_out: "empty", logged_in: true, name: name});
+        return;
+      }
       console.log(inbox);
       console.log(outbox);
-      res.render('check_friend_requests', {sitename: sitename, requests_in: inbox, requests_out: outbox, logged_in: true, name: name});
+      
       return;
     }
   });

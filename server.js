@@ -205,12 +205,16 @@ app.get('/check_friend_requests', function(req,res){
       var inbox = data.Items[0].friend_request_outbox;
       var outbox = data.Items[0].friend_request_outbox;
       if (inbox && outbox) {
+        console.log("inbox: " + inbox);
+        console.log("outbox: " + outbox);
         res.render('check_friend_requests', {sitename: sitename, requests_in: inbox, requests_out: outbox, logged_in: true, name: name});
         return;
       } else if (inbox) {
+        console.log("inbox: " + inbox);
         res.render('check_friend_requests', {sitename: sitename, requests_in: inbox, requests_out: ["empty"], logged_in: true, name: name});
         return;
       } else if (outbox) {
+        console.log("outbox: " + outbox);
         res.render('check_friend_requests', {sitename: sitename, requests_in: ["empty"], requests_out: outbox, logged_in: true, name: name});
         return;
       } else {

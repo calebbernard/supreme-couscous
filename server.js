@@ -252,9 +252,9 @@ app.post('/cancel_friend_request', function(req,res) {
       } else {
         console.log("Here3");
         console.log(data.Items[0].friend_request_outbox);
-        for (x = data.Items[0].friend_request_outbox.values[0]; x < data.Items[0].friend_request_outbox.values.length; x++) {
-          console.log(x);
-          if (x == request) {
+        for (x = 0; x < data.Items[0].friend_request_outbox.values.length; x++) {
+          console.log(data.Items[0].friend_request_outbox.values[x]);
+          if (data.Items[0].friend_request_outbox.values[x] == request) {
             // Remove the user from the friend request outbox AND remove this user from their inbox.
             console.log("Here4");
             var myParams = {

@@ -299,14 +299,16 @@ app.post('/cancel_friend_request', function(req,res) {
                 });
               }
             });
+          } else {
+            if (x == data.Items[0].friend_request_outbox.values.length) {
+              res.render('error', {sitename: sitename, error_msg: "No friend request to that user could be found.", return_page: return_page});
+              return;
+            }
           }
-          res.render('error', {sitename: sitename, error_msg: "No friend request to that user could be found.", return_page: return_page});
-          return;
         }
       }
     }
   });
-  
 });
 
 // Create a new account

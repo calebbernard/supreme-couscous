@@ -243,7 +243,7 @@ app.post('/cancel_friend_request', function(req,res) {
   var name = sess.name;
   var return_page = req.body.return_page || "/";
   var params = {
-    TableName = "users",
+    TableName: "users",
     KeyConditionExpression: "username = :user",
     ExpressionAttributeValues = {
       ":user":name

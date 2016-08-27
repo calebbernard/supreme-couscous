@@ -257,27 +257,27 @@ app.post('/cancel_friend_request', function(req,res) {
           if (data.Items[0].friend_request_outbox.values[x] == request) {
             // Remove the user from the friend request outbox AND remove this user from their inbox.
             console.log("Here4");
-            var newMyRequestsOutbox = data.Items[0].friend_request_outbox - data.Items[0].friend_request_outbox.values[x];
+            //var newMyRequestsOutbox = data.Items[0].friend_request_outbox - data.Items[0].friend_request_outbox.values[x];
             var myParams = {
               TableName:'users',
               Key: {'username': name},
-              UpdateExpression: 'set #attribute =:values',
+              UpdateExpression: 'delete #attribute =:values',
               ExpressionAttributeNames : {
                 '#attribute': 'friend_request_outbox'
               },
               ExpressionAttributeValues: {
-                ':values': newMyRequestsOutbox
+                ':values': request
               }
             };
             var theirParams = {
               TableName:'users',
               Key: {'username': request},
-              UpdateExpression: 'remove #oldIds :newIds',
+              UpdateExpression: 'delete #attribute :values',
               ExpressionAttributeNames : {
-                '#oldIds': 'friend_request_inbox'
+                '#attribute': 'friend_request_inbox'
               },
               ExpressionAttributeValues : {
-                ':newIds': docClient.createSet([name])
+                ':values': name  //docClient.createSet([name])
               }
             };
             docClient.update(myParams, function(err,data){

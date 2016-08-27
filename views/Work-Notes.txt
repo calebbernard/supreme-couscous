@@ -5,6 +5,9 @@ Social Features Checklist:
   - Add maximum username length
   - Make sure it only contains the characters you want
 
+- For all routes:
+  - If a user must be logged in to view a page, make sure that it checks their login status first.
+  - Spoof-proof: Don't assume a request's representation of facts is correct. Check the details against your database.
 
 - When the user logs in, redirect to dashboard instead of homepage
 - Add Groups system

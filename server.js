@@ -266,7 +266,7 @@ app.post('/cancel_friend_request', function(req,res) {
                 '#attribute': 'friend_request_outbox'
               },
               ExpressionAttributeValues: {
-                ':values': request
+                ':values': docClient.createSet([request])
               }
             };
             var theirParams = {
@@ -277,7 +277,7 @@ app.post('/cancel_friend_request', function(req,res) {
                 '#attribute': 'friend_request_inbox'
               },
               ExpressionAttributeValues : {
-                ':values': name  //docClient.createSet([name])
+                ':values': docClient.createSet([name])
               }
             };
             docClient.update(myParams, function(err,data){

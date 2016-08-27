@@ -258,6 +258,8 @@ app.post('/cancel_friend_request', function(req,res) {
             // Remove the user from the friend request outbox AND remove this user from their inbox.
             console.log("Here4");
             //var newMyRequestsOutbox = data.Items[0].friend_request_outbox - data.Items[0].friend_request_outbox.values[x];
+            console.log("Request Type: " + typeof(request));
+            console.log("Name Type: " + typeof(name));
             var myParams = {
               TableName:'users',
               Key: {'username': name},

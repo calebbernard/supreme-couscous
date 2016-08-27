@@ -238,28 +238,19 @@ app.post('/cancel_friend_request', function(req,res) {
       ":user":name
     }
   }
-  console.log("Here1");
   docClient.query(params, function(err,data) {
     if (err){
       console.error("Database error: ", JSON.stringify(err, null, 2));
       res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
       return;
     } else {
-      console.log("HEre2");
       if (!data.Items[0].friend_request_outbox.values) {
         res.render('error', {sitename: sitename, error_msg: "You have no requests to cancel.", return_page: return_page});
         return;
       } else {
-        console.log("Here3");
-        console.log(data.Items[0].friend_request_outbox);
         for (x = 0; x < data.Items[0].friend_request_outbox.values.length; x++) {
-          console.log(data.Items[0].friend_request_outbox.values[x]);
           if (data.Items[0].friend_request_outbox.values[x] == request) {
             // Remove the user from the friend request outbox AND remove this user from their inbox.
-            console.log("Here4");
-            //var newMyRequestsOutbox = data.Items[0].friend_request_outbox - data.Items[0].friend_request_outbox.values[x];
-            console.log("Request Type: " + typeof(request));
-            console.log("Name Type: " + typeof(name));
             var myParams = {
               TableName:'users',
               Key: {'username': name},
@@ -283,14 +274,90 @@ app.post('/cancel_friend_request', function(req,res) {
               }
             };
             docClient.update(myParams, function(err,data){
-              console.log("heree5");
               if (err){
                 console.error("Database error: ", JSON.stringify(err, null, 2));
                 res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
                 return;
               } else {
                 docClient.update(theirParams, function(err,data){
-                  console.log("Here6");
+                  if (err){
+                    console.error("Database error: ", JSON.stringify(err, null, 2));
+                    res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
+                    return;
+                  } else {
+                    res.render('success', {sitename: sitename, success_msg: "Friend request canceled successfully.", return_page: return_page});
+                    return;
+                  }
+                });
+              }
+            });
+          } else {
+            if (x == data.Items[0].friend_request_outbox.values.length) {
+              res.render('error', {sitename: sitename, error_msg: "No friend request to that user could be found.", return_page: return_page});
+              return;
+            }
+          }
+        }
+      }
+    }
+  });
+});
+
+// Reject an incoming friend request (flipped cancel)
+app.post('/reject_friend_request', function(req,res) {
+  var sess = req.session;
+  var request = req.body.who_to_reject;
+  var name = sess.name;
+  var return_page = req.body.page || "/";
+  var params = {
+    TableName: "users",
+    KeyConditionExpression: "username = :user",
+    ExpressionAttributeValues: {
+      ":user":name
+    }
+  }
+  docClient.query(params, function(err,data) {
+    if (err){
+      console.error("Database error: ", JSON.stringify(err, null, 2));
+      res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
+      return;
+    } else {
+      if (!data.Items[0].friend_request_inbox.values) {
+        res.render('error', {sitename: sitename, error_msg: "You have no requests to reject.", return_page: return_page});
+        return;
+      } else {
+        for (x = 0; x < data.Items[0].friend_request_inbox.values.length; x++) {
+          if (data.Items[0].friend_request_inbox.values[x] == request) {
+            // Remove the user from the friend request inbox AND remove this user from their outbox.
+            var myParams = {
+              TableName:'users',
+              Key: {'username': name},
+              UpdateExpression: 'delete #attribute :values',
+              ExpressionAttributeNames : {
+                '#attribute': 'friend_request_inbox'
+              },
+              ExpressionAttributeValues: {
+                ':values': docClient.createSet([request])
+              }
+            };
+            var theirParams = {
+              TableName:'users',
+              Key: {'username': request},
+              UpdateExpression: 'delete #attribute :values',
+              ExpressionAttributeNames : {
+                '#attribute': 'friend_request_outbox'
+              },
+              ExpressionAttributeValues : {
+                ':values': docClient.createSet([name])
+              }
+            };
+            docClient.update(myParams, function(err,data){
+              if (err){
+                console.error("Database error: ", JSON.stringify(err, null, 2));
+                res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
+                return;
+              } else {
+                docClient.update(theirParams, function(err,data){
                   if (err){
                     console.error("Database error: ", JSON.stringify(err, null, 2));
                     res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});

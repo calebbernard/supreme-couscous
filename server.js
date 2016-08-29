@@ -1,31 +1,39 @@
+// By Caleb Bernard
+// August 2016
+
+// Includes
 var express = require('express');
-var app = express();
 var handlebars = require('express-handlebars').create({defaultLayout:'main'});
-app.engine('handlebars', handlebars.engine);
-app.set('view engine', 'handlebars');
-app.set('port', 3001);
 var bodyParser = require('body-parser');
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
 var session = require('express-session');
 var secrets = require('./secret/keys.js');
-app.use(session({secret: secrets.secret}));
 var AWS = require('aws-sdk');
 var crypto = require('crypto');
 
+// Boilerplate
+var app = express();
+app.engine('handlebars', handlebars.engine);
+app.set('view engine', 'handlebars');
+app.set('port', 3001);
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(session({secret: secrets.secret}));
+
+// Give AWS my credentials
 AWS.config.update({
 	region: "us-west-2",
 	endpoint: "https://dynamodb.us-west-2.amazonaws.com",
 	accessKeyId: secrets.access_id,
 	secretAccessKey: secrets.access_key
 });
-
 var docClient = new AWS.DynamoDB.DocumentClient();
 var sess;
 
+// Modify this to change the sitename everywhere
 var sitename = "Calebville";
 
 // Homepage
+// Note: Transition this to a more blog-feed style - Make sure we can update it without restarting the server
 app.get('/', function(req,res){
   sess = req.session;
   var logged_in, name;
@@ -60,6 +68,92 @@ app.get('/create_account', function(req,res){
   }
   res.render('create_account', {sitename: sitename, logged_in: logged_in, name: sess.name});
   return;
+});
+
+// Create a new account
+// NOTE: Later I should add an email field.
+app.post('/create_account', function(req,res){
+  var sess = req.session;
+  var password_min_length = 5;
+  var username_max_length = 20;
+  var name = req.body.name.toLowerCase();
+  var password = req.body.password;
+  var pattern = /^[a-z0-9]+$/i;
+  var return_page = req.body.page || "/";
+  // Make sure they are not already logged in.
+  if (sess.name !== "" && sess.name !== undefined) {
+    res.render('error', {sitename: sitename, error_msg: "Please log out before making a new account.", return_page: return_page, logged_in: true, name: sess.name});
+    return;
+  // Make sure the name and password were both entered.
+  } else if (!name || !password){
+    res.render('error', {sitename: sitename, error_msg: "One or more fields was left blank.", return_page: return_page});
+    return;
+  // Make sure the password is long enough.
+  } else if (password.length < password_min_length){
+    res.render('error', {sitename: sitename, error_msg: "Your password must be at least " + password_min_length + " characters long.", return_page: return_page});
+    return;
+  // Make sure the username is not too long or short.
+  } else if (name < 1 || name > username_max_length) {
+    res.render('error', {sitename: sitename, error_msg: "Username cannot be shorter than 1 or longer than " + username_max_length + " characters.", return_page: return_page});
+    return;
+  } else if (!pattern.test(name)) {
+    res.render('error', {sitename: sitename, error_msg: "Username must only use alphanumeric characters.", return_page: return_page});
+    return;
+  } else {
+    
+    // Generate a 16-byte ASCII salt.
+    var salt = (crypto.randomBytes(16)).toString('hex');
+    var hash = crypto.createHash('sha256');
+    // Hash the password + salt
+    hash.update(password + salt);
+    password = hash.digest('hex');
+    
+    // These objects are used for database calls
+    var table = "users";
+    var checkName = {
+      TableName:table,
+      KeyConditionExpression: "username = :name",
+      ExpressionAttributeValues: {
+        ":name":name
+      }
+    };
+	  var params = {
+		  TableName:table,
+		  Item:{
+			  "username":name,
+			  "password":password,
+			  "salt":salt
+		  }
+	  };
+	  
+	  // Check to see if the chosen username is already taken.
+    docClient.query(checkName, function(err, data) {
+      if (err) {
+        console.error("Database error: ", JSON.stringify(err, null, 2));
+        res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
+        return;
+      } else {
+        if (data.Count !== 0) {
+          res.render('error', {sitename: sitename, error_msg: "This username is already taken. Please try again.", return_page: return_page});
+          return;
+        } else {
+          
+          // If everything so far is good, then we create the account.
+          docClient.put(params, function(err, data) {
+   	        if (err) {
+              console.error("Unable to add item. Error JSON:", JSON.stringify(err, null, 2));
+		          res.render('error', {sitename: sitename, error_msg: "Account could not be created.", return_page: return_page});
+		          return;
+    	      } else {
+              sess.name = name;
+              res.render('success', {sitename: sitename, success_msg: "Account created successfully!", return_page: return_page, logged_in: true, name: sess.name});
+              return;
+    	      }
+          });
+        }
+      }
+    });
+  }
 });
 
 // Profile page
@@ -363,15 +457,15 @@ app.post('/reject_friend_request', function(req,res) {
                     res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
                     return;
                   } else {
-                    res.render('success', {sitename: sitename, success_msg: "Friend request canceled successfully.", return_page: return_page});
+                    res.render('success', {sitename: sitename, success_msg: "Friend request rejected successfully.", return_page: return_page});
                     return;
                   }
                 });
               }
             });
           } else {
-            if (x == data.Items[0].friend_request_outbox.values.length) {
-              res.render('error', {sitename: sitename, error_msg: "No friend request to that user could be found.", return_page: return_page});
+            if (x == data.Items[0].friend_request_inbox.values.length) {
+              res.render('error', {sitename: sitename, error_msg: "No friend request from that user could be found.", return_page: return_page});
               return;
             }
           }
@@ -381,94 +475,124 @@ app.post('/reject_friend_request', function(req,res) {
   });
 });
 
-// Create a new account
-// NOTE: Later I should add an email field.
-app.post('/create_account', function(req,res){
+// Accept an incoming friend request (like reject but also add to each user's friends list)
+app.post('/accept_friend_request', function(req,res) {
   var sess = req.session;
-  var password_min_length = 5;
-  var username_max_length = 20;
-  var name = req.body.name.toLowerCase();
-  var password = req.body.password;
-  var pattern = /^[a-z0-9]+$/i;
+  var request = req.body.who_to_accept;
+  var name = sess.name;
   var return_page = req.body.page || "/";
-  // Make sure they are not already logged in.
-  if (sess.name !== "" && sess.name !== undefined) {
-    res.render('error', {sitename: sitename, error_msg: "Please log out before making a new account.", return_page: return_page, logged_in: true, name: sess.name});
-    return;
-  // Make sure the name and password were both entered.
-  } else if (!name || !password){
-    res.render('error', {sitename: sitename, error_msg: "One or more fields was left blank.", return_page: return_page});
-    return;
-  // Make sure the password is long enough.
-  } else if (password.length < password_min_length){
-    res.render('error', {sitename: sitename, error_msg: "Your password must be at least " + password_min_length + " characters long.", return_page: return_page});
-    return;
-  // Make sure the username is not too long or short.
-  } else if (name < 1 || name > username_max_length) {
-    res.render('error', {sitename: sitename, error_msg: "Username cannot be shorter than 1 or longer than " + username_max_length + " characters.", return_page: return_page});
-    return;
-  } else if (!pattern.test(name)) {
-    res.render('error', {sitename: sitename, error_msg: "Username must only use alphanumeric characters.", return_page: return_page});
-    return;
-  } else {
-    
-    // Generate a 16-byte ASCII salt.
-    var salt = (crypto.randomBytes(16)).toString('hex');
-    var hash = crypto.createHash('sha256');
-    // Hash the password + salt
-    hash.update(password + salt);
-    password = hash.digest('hex');
-    
-    // These objects are used for database calls
-    var table = "users";
-    var checkName = {
-      TableName:table,
-      KeyConditionExpression: "username = :name",
-      ExpressionAttributeValues: {
-        ":name":name
-      }
-    };
-	  var params = {
-		  TableName:table,
-		  Item:{
-			  "username":name,
-			  "password":password,
-			  "salt":salt
-		  }
-	  };
-	  
-	  // Check to see if the chosen username is already taken.
-    docClient.query(checkName, function(err, data) {
-      if (err) {
-        console.error("Database error: ", JSON.stringify(err, null, 2));
-        res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
+  var params = {
+    TableName: "users",
+    KeyConditionExpression: "username = :user",
+    ExpressionAttributeValues: {
+      ":user":name
+    }
+  }
+  docClient.query(params, function(err,data) {
+    if (err){
+      console.error("Database error: ", JSON.stringify(err, null, 2));
+      res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
+      return;
+    } else {
+      if (!data.Items[0].friend_request_inbox.values) {
+        res.render('error', {sitename: sitename, error_msg: "You have no requests to accept.", return_page: return_page});
         return;
       } else {
-        if (data.Count !== 0) {
-          res.render('error', {sitename: sitename, error_msg: "This username is already taken. Please try again.", return_page: return_page});
-          return;
-        } else {
-          
-          // If everything so far is good, then we create the account.
-          docClient.put(params, function(err, data) {
-   	        if (err) {
-              console.error("Unable to add item. Error JSON:", JSON.stringify(err, null, 2));
-		          res.render('error', {sitename: sitename, error_msg: "Account could not be created.", return_page: return_page});
-		          return;
-    	      } else {
-              sess.name = name;
-              res.render('success', {sitename: sitename, success_msg: "Account created successfully!", return_page: return_page, logged_in: true, name: sess.name});
+        for (x = 0; x < data.Items[0].friend_request_inbox.values.length; x++) {
+          if (data.Items[0].friend_request_inbox.values[x] == request) {
+            // Remove the user from the friend request inbox AND remove this user from their outbox.
+            var myParams = {
+              TableName:'users',
+              Key: {'username': name},
+              UpdateExpression: 'delete #attribute :values',
+              ExpressionAttributeNames : {
+                '#attribute': 'friend_request_inbox'
+              },
+              ExpressionAttributeValues: {
+                ':values': docClient.createSet([request])
+              }
+            };
+            var theirParams = {
+              TableName:'users',
+              Key: {'username': request},
+              UpdateExpression: 'delete #attribute :values',
+              ExpressionAttributeNames : {
+                '#attribute': 'friend_request_outbox'
+              },
+              ExpressionAttributeValues : {
+                ':values': docClient.createSet([name])
+              }
+            };
+            
+            var theirAddParams = {
+              TableName:'users',
+              Key: {'username': request},
+              UpdateExpression : 'ADD #oldIds :newIds',
+              ExpressionAttributeNames : {
+                '#oldIds' : 'friend_list'
+              },
+              ExpressionAttributeValues : {
+                ':newIds' : docClient.createSet([name])
+              }
+            };
+            var myAddParams = {
+              TableName:'users',
+              Key: {'username': name},
+              UpdateExpression : 'ADD #oldIds :newIds',
+              ExpressionAttributeNames : {
+                '#oldIds' : 'friend_list'
+              },
+              ExpressionAttributeValues : {
+                ':newIds' : docClient.createSet([request])
+              }
+            };
+            docClient.update(myParams, function(err,data){
+              if (err){
+                console.error("Database error: ", JSON.stringify(err, null, 2));
+                res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
+                return;
+              } else {
+                docClient.update(theirParams, function(err,data){
+                  if (err){
+                    console.error("Database error: ", JSON.stringify(err, null, 2));
+                    res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
+                    return;
+                  } else {
+                    docClient.update(theirAddParams, function(err,data){
+                      if (err) {
+                        console.error("Database error: ", JSON.stringify(err,null,2));
+                        res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
+                        return;
+                      } else {
+                        docClient,update(myAddParams, function(err,data){
+                          if (err) {
+                            console.error("Database error: ", JSON.stringify(err,null,2));
+                            res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
+                            return;
+                          } else {
+                            res.render('success', {sitename: sitename, success_msg: "Friend added successfully!", return_page: return_page});
+                            return;
+                          }
+                        });
+                      }
+                    });
+                  }
+                });
+              }
+            });
+          } else {
+            if (x == data.Items[0].friend_request_inbox.values.length) {
+              res.render('error', {sitename: sitename, error_msg: "No friend request from that user could be found.", return_page: return_page});
               return;
-    	      }
-          });
+            }
+          }
         }
       }
-    });
-  }
+    }
+  });
 });
 
-
-// Login route
+// Login code
 app.post('/login', function(req,res){
   var sess = req.session;
 
@@ -540,7 +664,7 @@ app.post('/login', function(req,res){
   });
 });
 
-// Logout route
+// Logout code
 app.post("/logout", function(req,res){
 	sess = req.session;
 	var return_page = req.body.page || "/";
@@ -555,6 +679,7 @@ app.post("/logout", function(req,res){
 	}
 });
 
+// Delete Account Page
 app.get("/delete_account", function(req,res){
   sess = req.session;
   var return_page = "/";
@@ -569,8 +694,10 @@ app.get("/delete_account", function(req,res){
   res.render('delete_account', {sitename: sitename, logged_in: logged_in, name: sess.name});
   return;
 });
-// Monitor this whenever I modify the database -- I need to remove all references to this account!
-// Also to consider: What to do about this user's shared content?
+
+// Delete Account code
+  // Monitor this whenever I modify the database -- I need to remove all references to this account!
+  // Also to consider: What to do about this user's shared content?
 app.post("/delete_account", function(req,res){
   sess = req.session;
   var return_page = req.body.page || "/";
@@ -621,16 +748,19 @@ app.post("/delete_account", function(req,res){
   }
 });
 
+// Error 404 boilerplate
 app.use(function(req,res){
 	res.render('404', {sitename: sitename});
 	return;
 });
 
+// Error 500 boilerplate
 app.use(function(err,req,res,next){
 	res.render('500', {sitename: sitename});
 	return;
 });
 
+// Start the server boilerplate
 app.listen(app.get('port'), function(){
 	console.log("Server started on port " + app.get('port') + ".");
 });

@@ -9,14 +9,6 @@ Social Features Checklist:
   - If a user must be logged in to view a page, make sure that it checks their login status first.
   - Spoof-proof: Don't assume a request's representation of facts is correct. Check the details against your database.
 
-- When the user logs in, redirect to dashboard instead of homepage
-- Add Groups system
-- Friends and Solo are special, built-in groups
-- New groups can be added
-- PM between group members
-- A group has an owner, who can give out permissions to members.
-- A group owns Stories
-- Add stories
 - Blocking a user (think about how this should be implemented)
 - Captcha and such for account creation, maybe login too
 - Add email for password regen options
@@ -26,3 +18,6 @@ Social Features Checklist:
   - Can't request someone who's already your friend
   - Can't request someone who's already in your request inbox OR outbox
   - Can't request yourself
+
+- For all database calls:
+  - Instead of nesting each change inside the previous change's success code, I think I might can make one big Params that does it all! (look into this)

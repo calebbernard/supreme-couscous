@@ -564,7 +564,7 @@ app.post('/accept_friend_request', function(req,res) {
                         res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
                         return;
                       } else {
-                        docClient,update(myAddParams, function(err,data){
+                        docClient.update(myAddParams, function(err,data){
                           if (err) {
                             console.error("Database error: ", JSON.stringify(err,null,2));
                             res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});

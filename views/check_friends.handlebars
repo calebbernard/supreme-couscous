@@ -1,0 +1,21 @@
+<h3>Friends List</h3>
+<table class="table table-striped">
+  {{#each friends}}
+  <tr>
+    <td>
+      {{this}}
+    </td>
+    <td>
+      <form method="POST" action="/delete_friend">
+        <input type="hidden" name="who_to_delete" value="{{this}}" />
+        <input type="hidden" name="page" value="/check_friends" />
+        <div>
+          <label for="password">Enter your password: </label>
+          <input type="password" id="password" name="password" />
+          <input type="submit" class="btn btn-success" value="Delete Friend" />
+        </div>
+      </form>
+    </td>
+  </tr>
+  {{/each}}
+</table>

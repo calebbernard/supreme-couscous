@@ -32,6 +32,14 @@ var sess;
 // Modify this to change the sitename everywhere
 var sitename = "Calebville";
 
+
+/*
+
+General Routes
+
+*/
+
+
 // Homepage
 // Note: Transition this to a more blog-feed style - Make sure we can update it without restarting the server
 app.get('/', function(req,res){
@@ -56,6 +64,515 @@ app.post('/', function(req,res){
   res.render('home', {sitename: sitename, logged_in: logged_in, name: sess.name});
   return;
 });
+
+// Profile page
+app.get('/dashboard', function(req,res){
+  sess = req.session;
+  var return_page = "/";
+  var logged_in, name;
+  if(sess.name === "" || sess.name === undefined){
+    logged_in = false;
+    res.render('error', {sitename: sitename, error_msg: "Must be logged in to view profile!", return_page: return_page});
+    return;
+  } else {
+    logged_in = true;
+  }
+  res.render('dashboard', {sitename: sitename, logged_in: logged_in, name: sess.name});
+  return;
+});
+app.post('/dashboard', function(req,res){
+  var sess = req.session;
+  var name = sess.name;
+  var return_page = req.body.page || "/";
+  if (name === "" || name === undefined) {
+    res.render('error', {sitename: sitename, error_msg: "You must be logged in before you can view your profile!", return_page: return_page});
+    return;
+  }
+  res.render('dashboard', {sitename: sitename, logged_in: true, name: name});
+  return;
+});
+
+
+/*
+
+Friend Management Routes
+
+*/
+
+
+// Friend Request Page
+app.get('/add_friend', function(req,res){
+  sess = req.session;
+  var return_page = "/";
+  var logged_in, name;
+  if(sess.name === "" || sess.name === undefined){
+    logged_in = false;
+    res.render('error', {sitename: sitename, error_msg: "Must be logged in to add a friend!", return_page: return_page});
+    return;
+  } else {
+    logged_in = true;
+    res.render('add_friend', {sitename: sitename, logged_in: logged_in, name: sess.name});
+    return;
+  }
+});
+
+// Sending a friend request
+app.post('/add_friend', function(req,res){
+  var sess = req.session;
+  var name = sess.name;
+  var request = req.body.friend_req;
+  var return_page = req.body.page || "/";
+  if (name === "" || name === undefined) {
+    res.render('error', {sitename: sitename, error_msg: "You must be logged in before you can add a friend!", return_page: return_page});
+    return;
+  }
+  var checkName = {
+    TableName:'users',
+    KeyConditionExpression: "username = :name",
+      ExpressionAttributeValues: {
+        ":name":request
+      }
+  };
+  
+  var theirParams = {
+    TableName:'users',
+    Key: {'username': request},
+    UpdateExpression : 'ADD #oldIds :newIds',
+    ExpressionAttributeNames : {
+      '#oldIds' : 'friend_request_inbox'
+    },
+    ExpressionAttributeValues : {
+      ':newIds' : docClient.createSet([name])
+    }
+  };
+  var myParams = {
+    TableName:'users',
+    Key: {'username': name},
+    UpdateExpression : 'ADD #oldIds :newIds',
+    ExpressionAttributeNames : {
+      '#oldIds' : 'friend_request_outbox'
+    },
+    ExpressionAttributeValues : {
+      ':newIds' : docClient.createSet([request])
+    }
+  };
+  
+  // First, make sure the given username exists.
+  docClient.query(checkName, function(err,data) {
+    if (err) {
+      console.error("Database error: ", JSON.stringify(err, null, 2));
+      res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", logged_in: logged_in, name: name, return_page: return_page});
+      return;
+    } else {
+      if (data.Count === 0) {
+        res.render('error', {sitename: sitename, error_msg: "That username was not found.", logged_in: logged_in, name: name, return_page: return_page});
+        return;
+      } else {
+        docClient.update(myParams, function (err, data){
+          if (err) {
+            console.error("Database error: ", JSON.stringify(err, null, 2));
+            res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database(1).", logged_in: logged_in, name: name, return_page: return_page});
+            return;
+          } else {
+            docClient.update(theirParams, function (err, data){
+              if (err) {
+                console.error("Database error: ", JSON.stringify(err, null, 2));
+                res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database(2).", logged_in: logged_in, name: name, return_page: return_page});
+                return;
+              } else {
+                res.render('success', {sitename: sitename, success_msg: "Friend request sent!", return_page: return_page, logged_in: true, name: name});
+                return;
+              }
+            });
+          }
+        });
+      }
+    }
+  });
+});
+
+// Friend Request Management Page
+app.get('/check_friend_requests', function(req,res){
+  sess = req.session;
+  var return_page = "/dashboard";
+  var logged_in;
+  var name = sess.name;
+  if(sess.name === "" || sess.name === undefined){
+    logged_in = false;
+    res.render('error', {sitename: sitename, error_msg: "Must be logged in to manage your friend requests!", return_page: return_page});
+    return;
+  }
+  
+  var params = {
+    TableName:'users',
+    KeyConditionExpression: "username = :name",
+      ExpressionAttributeValues: {
+        ":name":name
+      }
+  };
+  
+  docClient.query(params, function (err, data){
+    if (err) {
+      console.error("Database error: ", JSON.stringify(err, null, 2));
+      res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
+      return;
+    } else {
+      var inbox = data.Items[0].friend_request_inbox;
+      var outbox = data.Items[0].friend_request_outbox;
+      if (inbox && outbox) {
+        res.render('check_friend_requests', {sitename: sitename, requests_in: inbox.values, requests_out: outbox.values, logged_in: true, name: name});
+        return;
+      } else if (inbox) {
+        res.render('check_friend_requests', {sitename: sitename, requests_in: inbox.values, requests_out: [], logged_in: true, name: name});
+        return;
+      } else if (outbox) {
+        res.render('check_friend_requests', {sitename: sitename, requests_in: [], requests_out: outbox.values, logged_in: true, name: name});
+        return;
+      } else {
+        res.render('check_friend_requests', {sitename: sitename, requests_in: [], requests_out: [], logged_in: true, name: name});
+        return;
+      }
+    }
+  });
+});
+
+// Cancel an outstanding friend request
+app.post('/cancel_friend_request', function(req,res) {
+  var sess = req.session;
+  var request = req.body.who_to_cancel;
+  var name = sess.name;
+  var logged_in;
+  if(sess.name === "" || sess.name === undefined){
+    logged_in = false;
+    res.render('error', {sitename: sitename, error_msg: "Must be logged in to manage your friend requests!", return_page: return_page});
+    return;
+  }
+  var return_page = req.body.return_page || "/";
+  var params = {
+    TableName: "users",
+    KeyConditionExpression: "username = :user",
+    ExpressionAttributeValues: {
+      ":user":name
+    }
+  }
+  docClient.query(params, function(err,data) {
+    if (err){
+      console.error("Database error: ", JSON.stringify(err, null, 2));
+      res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", logged_in: logged_in, name: name, return_page: return_page});
+      return;
+    } else {
+      if (!data.Items[0].friend_request_outbox.values) {
+        res.render('error', {sitename: sitename, error_msg: "You have no requests to cancel.", logged_in: logged_in, name: name, return_page: return_page});
+        return;
+      } else {
+        for (x = 0; x < data.Items[0].friend_request_outbox.values.length; x++) {
+          if (data.Items[0].friend_request_outbox.values[x] == request) {
+            // Remove the user from the friend request outbox AND remove this user from their inbox.
+            var myParams = {
+              TableName:'users',
+              Key: {'username': name},
+              UpdateExpression: 'delete #attribute :values',
+              ExpressionAttributeNames : {
+                '#attribute': 'friend_request_outbox'
+              },
+              ExpressionAttributeValues: {
+                ':values': docClient.createSet([request])
+              }
+            };
+            var theirParams = {
+              TableName:'users',
+              Key: {'username': request},
+              UpdateExpression: 'delete #attribute :values',
+              ExpressionAttributeNames : {
+                '#attribute': 'friend_request_inbox'
+              },
+              ExpressionAttributeValues : {
+                ':values': docClient.createSet([name])
+              }
+            };
+            docClient.update(myParams, function(err,data){
+              if (err){
+                console.error("Database error: ", JSON.stringify(err, null, 2));
+                res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", logged_in: logged_in, name: name, return_page: return_page});
+                return;
+              } else {
+                docClient.update(theirParams, function(err,data){
+                  if (err){
+                    console.error("Database error: ", JSON.stringify(err, null, 2));
+                    res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", logged_in: logged_in, name: name, return_page: return_page});
+                    return;
+                  } else {
+                    res.render('success', {sitename: sitename, success_msg: "Friend request canceled successfully.", logged_in: logged_in, name: name, return_page: return_page});
+                    return;
+                  }
+                });
+              }
+            });
+          } else {
+            if (x == data.Items[0].friend_request_outbox.values.length) {
+              res.render('error', {sitename: sitename, error_msg: "No friend request to that user could be found.", logged_in: logged_in, name: name, return_page: return_page});
+              return;
+            }
+          }
+        }
+      }
+    }
+  });
+});
+
+// Reject an incoming friend request (flipped cancel)
+app.post('/reject_friend_request', function(req,res) {
+  var sess = req.session;
+  var request = req.body.who_to_reject;
+  var name = sess.name;
+  var logged_in;
+  if(sess.name === "" || sess.name === undefined){
+    logged_in = false;
+    res.render('error', {sitename: sitename, error_msg: "Must be logged in to manage your friend requests!", return_page: return_page});
+    return;
+  }
+  var return_page = req.body.page || "/";
+  var params = {
+    TableName: "users",
+    KeyConditionExpression: "username = :user",
+    ExpressionAttributeValues: {
+      ":user":name
+    }
+  }
+  docClient.query(params, function(err,data) {
+    if (err){
+      console.error("Database error: ", JSON.stringify(err, null, 2));
+      res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
+      return;
+    } else {
+      if (!data.Items[0].friend_request_inbox.values) {
+        res.render('error', {sitename: sitename, error_msg: "You have no requests to reject.", return_page: return_page});
+        return;
+      } else {
+        for (x = 0; x < data.Items[0].friend_request_inbox.values.length; x++) {
+          if (data.Items[0].friend_request_inbox.values[x] == request) {
+            // Remove the user from the friend request inbox AND remove this user from their outbox.
+            var myParams = {
+              TableName:'users',
+              Key: {'username': name},
+              UpdateExpression: 'delete #attribute :values',
+              ExpressionAttributeNames : {
+                '#attribute': 'friend_request_inbox'
+              },
+              ExpressionAttributeValues: {
+                ':values': docClient.createSet([request])
+              }
+            };
+            var theirParams = {
+              TableName:'users',
+              Key: {'username': request},
+              UpdateExpression: 'delete #attribute :values',
+              ExpressionAttributeNames : {
+                '#attribute': 'friend_request_outbox'
+              },
+              ExpressionAttributeValues : {
+                ':values': docClient.createSet([name])
+              }
+            };
+            docClient.update(myParams, function(err,data){
+              if (err){
+                console.error("Database error: ", JSON.stringify(err, null, 2));
+                res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
+                return;
+              } else {
+                docClient.update(theirParams, function(err,data){
+                  if (err){
+                    console.error("Database error: ", JSON.stringify(err, null, 2));
+                    res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
+                    return;
+                  } else {
+                    res.render('success', {sitename: sitename, success_msg: "Friend request rejected successfully.", return_page: return_page});
+                    return;
+                  }
+                });
+              }
+            });
+          } else {
+            if (x == data.Items[0].friend_request_inbox.values.length) {
+              res.render('error', {sitename: sitename, error_msg: "No friend request from that user could be found.", return_page: return_page});
+              return;
+            }
+          }
+        }
+      }
+    }
+  });
+});
+
+// Accept an incoming friend request (like reject but also add to each user's friends list)
+app.post('/accept_friend_request', function(req,res) {
+  var sess = req.session;
+  var request = req.body.who_to_accept;
+  var name = sess.name;
+  var logged_in;
+  if(name === "" || name === undefined){
+    logged_in = false;
+    res.render('error', {sitename: sitename, error_msg: "Must be logged in to view profile!", logged_in: logged_in, return_page: return_page});
+    return;
+  } else {
+    logged_in = true;
+  }
+  var return_page = req.body.page || "/";
+  var params = {
+    TableName: "users",
+    KeyConditionExpression: "username = :user",
+    ExpressionAttributeValues: {
+      ":user":name
+    }
+  }
+  docClient.query(params, function(err,data) {
+    if (err){
+      console.error("Database error: ", JSON.stringify(err, null, 2));
+      res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", logged_in: logged_in, return_page: return_page});
+      return;
+    } else {
+      if (!data.Items[0].friend_request_inbox.values) {
+        res.render('error', {sitename: sitename, error_msg: "You have no requests to accept.", logged_in: logged_in, return_page: return_page});
+        return;
+      } else {
+        for (x = 0; x < data.Items[0].friend_request_inbox.values.length; x++) {
+          if (data.Items[0].friend_request_inbox.values[x] == request) {
+            // Remove the user from the friend request inbox AND remove this user from their outbox.
+            var myParams = {
+              TableName:'users',
+              Key: {'username': name},
+              UpdateExpression: 'delete #attribute :values',
+              ExpressionAttributeNames : {
+                '#attribute': 'friend_request_inbox'
+              },
+              ExpressionAttributeValues: {
+                ':values': docClient.createSet([request])
+              }
+            };
+            var theirParams = {
+              TableName:'users',
+              Key: {'username': request},
+              UpdateExpression: 'delete #attribute :values',
+              ExpressionAttributeNames : {
+                '#attribute': 'friend_request_outbox'
+              },
+              ExpressionAttributeValues : {
+                ':values': docClient.createSet([name])
+              }
+            };
+            
+            var theirAddParams = {
+              TableName:'users',
+              Key: {'username': request},
+              UpdateExpression : 'ADD #oldIds :newIds',
+              ExpressionAttributeNames : {
+                '#oldIds' : 'friend_list'
+              },
+              ExpressionAttributeValues : {
+                ':newIds' : docClient.createSet([name])
+              }
+            };
+            var myAddParams = {
+              TableName:'users',
+              Key: {'username': name},
+              UpdateExpression : 'ADD #oldIds :newIds',
+              ExpressionAttributeNames : {
+                '#oldIds' : 'friend_list'
+              },
+              ExpressionAttributeValues : {
+                ':newIds' : docClient.createSet([request])
+              }
+            };
+            docClient.update(myParams, function(err,data){
+              if (err){
+                console.error("Database error: ", JSON.stringify(err, null, 2));
+                res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", logged_in: logged_in, return_page: return_page});
+                return;
+              } else {
+                docClient.update(theirParams, function(err,data){
+                  if (err){
+                    console.error("Database error: ", JSON.stringify(err, null, 2));
+                    res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", logged_in: logged_in, return_page: return_page});
+                    return;
+                  } else {
+                    docClient.update(theirAddParams, function(err,data){
+                      if (err) {
+                        console.error("Database error: ", JSON.stringify(err,null,2));
+                        res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", logged_in: logged_in, return_page: return_page});
+                        return;
+                      } else {
+                        docClient.update(myAddParams, function(err,data){
+                          if (err) {
+                            console.error("Database error: ", JSON.stringify(err,null,2));
+                            res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", logged_in: logged_in, return_page: return_page});
+                            return;
+                          } else {
+                            res.render('success', {sitename: sitename, success_msg: "Friend added successfully!", logged_in: logged_in, return_page: return_page});
+                            return;
+                          }
+                        });
+                      }
+                    });
+                  }
+                });
+              }
+            });
+          } else {
+            if (x == data.Items[0].friend_request_inbox.values.length) {
+              res.render('error', {sitename: sitename, error_msg: "No friend request from that user could be found.", logged_in: logged_in, return_page: return_page});
+              return;
+            }
+          }
+        }
+      }
+    }
+  });
+});
+
+app.get('/check_friends', function(req,res){
+  sess = req.session;
+  var return_page = "/dashboard";
+  var logged_in;
+  var name = sess.name;
+  if(sess.name === "" || sess.name === undefined){
+    logged_in = false;
+    res.render('error', {sitename: sitename, error_msg: "Must be logged in to manage your friends!", return_page: return_page});
+    return;
+  }
+  
+  var params = {
+    TableName:'users',
+    KeyConditionExpression: "username = :name",
+      ExpressionAttributeValues: {
+        ":name":name
+      }
+  };
+  
+  docClient.query(params, function (err, data){
+    if (err) {
+      console.error("Database error: ", JSON.stringify(err, null, 2));
+      res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
+      return;
+    } else {
+      var friends = data.Items[0].friend_list;
+      if (friends) {
+        res.render('check_friends', {sitename: sitename, friends: friends.values, logged_in: true, name: name});
+        return;
+      } else {
+        res.render('check_friends', {sitename: sitename, requests_in: [], requests_out: [], logged_in: true, name: name});
+        return;
+      }
+    }
+  });
+});
+
+
+/*
+
+Account Management Routes
+
+*/
+
 
 // Create Account Page
 app.get('/create_account', function(req,res){
@@ -146,7 +663,7 @@ app.post('/create_account', function(req,res){
 		          return;
     	      } else {
               sess.name = name;
-              res.render('success', {sitename: sitename, success_msg: "Account created successfully!", return_page: return_page, logged_in: true, name: sess.name});
+              res.render('success', {sitename: sitename, success_msg: "Account created successfully!", return_page: "/dashboard", logged_in: true, name: sess.name});
               return;
     	      }
           });
@@ -154,442 +671,6 @@ app.post('/create_account', function(req,res){
       }
     });
   }
-});
-
-// Profile page
-app.get('/dashboard', function(req,res){
-  sess = req.session;
-  var return_page = "/";
-  var logged_in, name;
-  if(sess.name === "" || sess.name === undefined){
-    logged_in = false;
-    res.render('error', {sitename: sitename, error_msg: "Must be logged in to view profile!", return_page: return_page});
-    return;
-  } else {
-    logged_in = true;
-  }
-  res.render('dashboard', {sitename: sitename, logged_in: logged_in, name: sess.name});
-  return;
-});
-app.post('/dashboard', function(req,res){
-  var sess = req.session;
-  var name = sess.name;
-  var return_page = req.body.page || "/";
-  if (name === "" || name === undefined) {
-    res.render('error', {sitename: sitename, error_msg: "You must be logged in before you can view your profile!", return_page: return_page});
-    return;
-  }
-  res.render('dashboard', {sitename: sitename, logged_in: true, name: name});
-  return;
-});
-
-// Friend Request Page
-app.get('/add_friend', function(req,res){
-  sess = req.session;
-  var return_page = "/";
-  var logged_in, name;
-  if(sess.name === "" || sess.name === undefined){
-    logged_in = false;
-    res.render('error', {sitename: sitename, error_msg: "Must be logged in to add a friend!", return_page: return_page});
-    return;
-  } else {
-    logged_in = true;
-    res.render('add_friend', {sitename: sitename, logged_in: logged_in, name: sess.name});
-    return;
-  }
-});
-
-// Sending a friend request
-app.post('/add_friend', function(req,res){
-  var sess = req.session;
-  var name = sess.name;
-  var request = req.body.friend_req;
-  var return_page = req.body.page || "/";
-  if (name === "" || name === undefined) {
-    res.render('error', {sitename: sitename, error_msg: "You must be logged in before you can add a friend!", return_page: return_page});
-    return;
-  }
-  var checkName = {
-    TableName:'users',
-    KeyConditionExpression: "username = :name",
-      ExpressionAttributeValues: {
-        ":name":request
-      }
-  };
-  
-  var theirParams = {
-    TableName:'users',
-    Key: {'username': request},
-    UpdateExpression : 'ADD #oldIds :newIds',
-    ExpressionAttributeNames : {
-      '#oldIds' : 'friend_request_inbox'
-    },
-    ExpressionAttributeValues : {
-      ':newIds' : docClient.createSet([name])
-    }
-  };
-  var myParams = {
-    TableName:'users',
-    Key: {'username': name},
-    UpdateExpression : 'ADD #oldIds :newIds',
-    ExpressionAttributeNames : {
-      '#oldIds' : 'friend_request_outbox'
-    },
-    ExpressionAttributeValues : {
-      ':newIds' : docClient.createSet([request])
-    }
-  };
-  
-  // First, make sure the given username exists.
-  docClient.query(checkName, function(err,data) {
-    if (err) {
-      console.error("Database error: ", JSON.stringify(err, null, 2));
-      res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
-      return;
-    } else {
-      if (data.Count === 0) {
-        res.render('error', {sitename: sitename, error_msg: "That username was not found.", return_page: return_page});
-        return;
-      } else {
-        docClient.update(myParams, function (err, data){
-          if (err) {
-            console.error("Database error: ", JSON.stringify(err, null, 2));
-            res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database1.", return_page: return_page});
-            return;
-          } else {
-            docClient.update(theirParams, function (err, data){
-              if (err) {
-                console.error("Database error: ", JSON.stringify(err, null, 2));
-                res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database2.", return_page: return_page});
-                return;
-              } else {
-                res.render('success', {sitename: sitename, success_msg: "Friend request sent!", return_page: return_page, logged_in: true, name: name});
-                return;
-              }
-            });
-          }
-        });
-      }
-    }
-  });
-});
-
-// Friend Request Management Page
-app.get('/check_friend_requests', function(req,res){
-  sess = req.session;
-  var return_page = "/dashboard";
-  var logged_in;
-  var name = sess.name;
-  if(sess.name === "" || sess.name === undefined){
-    logged_in = false;
-    res.render('error', {sitename: sitename, error_msg: "Must be logged in to manage your friend requests!", return_page: return_page});
-    return;
-  }
-  
-  var params = {
-    TableName:'users',
-    KeyConditionExpression: "username = :name",
-      ExpressionAttributeValues: {
-        ":name":name
-      }
-  };
-  
-  docClient.query(params, function (err, data){
-    if (err) {
-      console.error("Database error: ", JSON.stringify(err, null, 2));
-      res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
-      return;
-    } else {
-      var inbox = data.Items[0].friend_request_inbox;
-      var outbox = data.Items[0].friend_request_outbox;
-      if (inbox && outbox) {
-        res.render('check_friend_requests', {sitename: sitename, requests_in: inbox.values, requests_out: outbox.values, logged_in: true, name: name});
-        return;
-      } else if (inbox) {
-        res.render('check_friend_requests', {sitename: sitename, requests_in: inbox.values, requests_out: [], logged_in: true, name: name});
-        return;
-      } else if (outbox) {
-        res.render('check_friend_requests', {sitename: sitename, requests_in: [], requests_out: outbox.values, logged_in: true, name: name});
-        return;
-      } else {
-        res.render('check_friend_requests', {sitename: sitename, requests_in: [], requests_out: [], logged_in: true, name: name});
-        return;
-      }
-    }
-  });
-});
-
-// Cancel an outstanding friend request
-app.post('/cancel_friend_request', function(req,res) {
-  var sess = req.session;
-  var request = req.body.who_to_cancel;
-  var name = sess.name;
-  var return_page = req.body.return_page || "/";
-  var params = {
-    TableName: "users",
-    KeyConditionExpression: "username = :user",
-    ExpressionAttributeValues: {
-      ":user":name
-    }
-  }
-  docClient.query(params, function(err,data) {
-    if (err){
-      console.error("Database error: ", JSON.stringify(err, null, 2));
-      res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
-      return;
-    } else {
-      if (!data.Items[0].friend_request_outbox.values) {
-        res.render('error', {sitename: sitename, error_msg: "You have no requests to cancel.", return_page: return_page});
-        return;
-      } else {
-        for (x = 0; x < data.Items[0].friend_request_outbox.values.length; x++) {
-          if (data.Items[0].friend_request_outbox.values[x] == request) {
-            // Remove the user from the friend request outbox AND remove this user from their inbox.
-            var myParams = {
-              TableName:'users',
-              Key: {'username': name},
-              UpdateExpression: 'delete #attribute :values',
-              ExpressionAttributeNames : {
-                '#attribute': 'friend_request_outbox'
-              },
-              ExpressionAttributeValues: {
-                ':values': docClient.createSet([request])
-              }
-            };
-            var theirParams = {
-              TableName:'users',
-              Key: {'username': request},
-              UpdateExpression: 'delete #attribute :values',
-              ExpressionAttributeNames : {
-                '#attribute': 'friend_request_inbox'
-              },
-              ExpressionAttributeValues : {
-                ':values': docClient.createSet([name])
-              }
-            };
-            docClient.update(myParams, function(err,data){
-              if (err){
-                console.error("Database error: ", JSON.stringify(err, null, 2));
-                res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
-                return;
-              } else {
-                docClient.update(theirParams, function(err,data){
-                  if (err){
-                    console.error("Database error: ", JSON.stringify(err, null, 2));
-                    res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
-                    return;
-                  } else {
-                    res.render('success', {sitename: sitename, success_msg: "Friend request canceled successfully.", return_page: return_page});
-                    return;
-                  }
-                });
-              }
-            });
-          } else {
-            if (x == data.Items[0].friend_request_outbox.values.length) {
-              res.render('error', {sitename: sitename, error_msg: "No friend request to that user could be found.", return_page: return_page});
-              return;
-            }
-          }
-        }
-      }
-    }
-  });
-});
-
-// Reject an incoming friend request (flipped cancel)
-app.post('/reject_friend_request', function(req,res) {
-  var sess = req.session;
-  var request = req.body.who_to_reject;
-  var name = sess.name;
-  var return_page = req.body.page || "/";
-  var params = {
-    TableName: "users",
-    KeyConditionExpression: "username = :user",
-    ExpressionAttributeValues: {
-      ":user":name
-    }
-  }
-  docClient.query(params, function(err,data) {
-    if (err){
-      console.error("Database error: ", JSON.stringify(err, null, 2));
-      res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
-      return;
-    } else {
-      if (!data.Items[0].friend_request_inbox.values) {
-        res.render('error', {sitename: sitename, error_msg: "You have no requests to reject.", return_page: return_page});
-        return;
-      } else {
-        for (x = 0; x < data.Items[0].friend_request_inbox.values.length; x++) {
-          if (data.Items[0].friend_request_inbox.values[x] == request) {
-            // Remove the user from the friend request inbox AND remove this user from their outbox.
-            var myParams = {
-              TableName:'users',
-              Key: {'username': name},
-              UpdateExpression: 'delete #attribute :values',
-              ExpressionAttributeNames : {
-                '#attribute': 'friend_request_inbox'
-              },
-              ExpressionAttributeValues: {
-                ':values': docClient.createSet([request])
-              }
-            };
-            var theirParams = {
-              TableName:'users',
-              Key: {'username': request},
-              UpdateExpression: 'delete #attribute :values',
-              ExpressionAttributeNames : {
-                '#attribute': 'friend_request_outbox'
-              },
-              ExpressionAttributeValues : {
-                ':values': docClient.createSet([name])
-              }
-            };
-            docClient.update(myParams, function(err,data){
-              if (err){
-                console.error("Database error: ", JSON.stringify(err, null, 2));
-                res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
-                return;
-              } else {
-                docClient.update(theirParams, function(err,data){
-                  if (err){
-                    console.error("Database error: ", JSON.stringify(err, null, 2));
-                    res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
-                    return;
-                  } else {
-                    res.render('success', {sitename: sitename, success_msg: "Friend request rejected successfully.", return_page: return_page});
-                    return;
-                  }
-                });
-              }
-            });
-          } else {
-            if (x == data.Items[0].friend_request_inbox.values.length) {
-              res.render('error', {sitename: sitename, error_msg: "No friend request from that user could be found.", return_page: return_page});
-              return;
-            }
-          }
-        }
-      }
-    }
-  });
-});
-
-// Accept an incoming friend request (like reject but also add to each user's friends list)
-app.post('/accept_friend_request', function(req,res) {
-  var sess = req.session;
-  var request = req.body.who_to_accept;
-  var name = sess.name;
-  var return_page = req.body.page || "/";
-  var params = {
-    TableName: "users",
-    KeyConditionExpression: "username = :user",
-    ExpressionAttributeValues: {
-      ":user":name
-    }
-  }
-  docClient.query(params, function(err,data) {
-    if (err){
-      console.error("Database error: ", JSON.stringify(err, null, 2));
-      res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
-      return;
-    } else {
-      if (!data.Items[0].friend_request_inbox.values) {
-        res.render('error', {sitename: sitename, error_msg: "You have no requests to accept.", return_page: return_page});
-        return;
-      } else {
-        for (x = 0; x < data.Items[0].friend_request_inbox.values.length; x++) {
-          if (data.Items[0].friend_request_inbox.values[x] == request) {
-            // Remove the user from the friend request inbox AND remove this user from their outbox.
-            var myParams = {
-              TableName:'users',
-              Key: {'username': name},
-              UpdateExpression: 'delete #attribute :values',
-              ExpressionAttributeNames : {
-                '#attribute': 'friend_request_inbox'
-              },
-              ExpressionAttributeValues: {
-                ':values': docClient.createSet([request])
-              }
-            };
-            var theirParams = {
-              TableName:'users',
-              Key: {'username': request},
-              UpdateExpression: 'delete #attribute :values',
-              ExpressionAttributeNames : {
-                '#attribute': 'friend_request_outbox'
-              },
-              ExpressionAttributeValues : {
-                ':values': docClient.createSet([name])
-              }
-            };
-            
-            var theirAddParams = {
-              TableName:'users',
-              Key: {'username': request},
-              UpdateExpression : 'ADD #oldIds :newIds',
-              ExpressionAttributeNames : {
-                '#oldIds' : 'friend_list'
-              },
-              ExpressionAttributeValues : {
-                ':newIds' : docClient.createSet([name])
-              }
-            };
-            var myAddParams = {
-              TableName:'users',
-              Key: {'username': name},
-              UpdateExpression : 'ADD #oldIds :newIds',
-              ExpressionAttributeNames : {
-                '#oldIds' : 'friend_list'
-              },
-              ExpressionAttributeValues : {
-                ':newIds' : docClient.createSet([request])
-              }
-            };
-            docClient.update(myParams, function(err,data){
-              if (err){
-                console.error("Database error: ", JSON.stringify(err, null, 2));
-                res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
-                return;
-              } else {
-                docClient.update(theirParams, function(err,data){
-                  if (err){
-                    console.error("Database error: ", JSON.stringify(err, null, 2));
-                    res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
-                    return;
-                  } else {
-                    docClient.update(theirAddParams, function(err,data){
-                      if (err) {
-                        console.error("Database error: ", JSON.stringify(err,null,2));
-                        res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
-                        return;
-                      } else {
-                        docClient.update(myAddParams, function(err,data){
-                          if (err) {
-                            console.error("Database error: ", JSON.stringify(err,null,2));
-                            res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", return_page: return_page});
-                            return;
-                          } else {
-                            res.render('success', {sitename: sitename, success_msg: "Friend added successfully!", return_page: return_page});
-                            return;
-                          }
-                        });
-                      }
-                    });
-                  }
-                });
-              }
-            });
-          } else {
-            if (x == data.Items[0].friend_request_inbox.values.length) {
-              res.render('error', {sitename: sitename, error_msg: "No friend request from that user could be found.", return_page: return_page});
-              return;
-            }
-          }
-        }
-      }
-    }
-  });
 });
 
 // Login code
@@ -747,6 +828,14 @@ app.post("/delete_account", function(req,res){
         });
   }
 });
+
+
+/*
+
+Boilerplate Routes
+
+*/
+
 
 // Error 404 boilerplate
 app.use(function(req,res){

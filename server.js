@@ -596,6 +596,7 @@ app.post('/delete_friend', function(req,res){
       return;
     } else {
       // Now we want to hash the given password using the salt in the database.
+      console.log(data);
 		  var salt = data.Item.salt;
 		  var hash = crypto.createHash('sha256');
 		  hash.update(pass + salt);

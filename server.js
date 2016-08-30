@@ -603,8 +603,20 @@ app.post('/delete_friend', function(req,res){
 		  var hashedPassword = hash.digest('hex');
 		  console.log(hashedPassword);
 			if (hashedPassword == data.Items[0].password){
+			  
+			  var delParams = {
+          TableName:'users',
+          Key: {'username': name},
+          UpdateExpression: 'delete #attribute :values',
+          ExpressionAttributeNames : {
+            '#attribute': 'friend_list'
+          },
+          ExpressionAttributeValues: {
+            ':values': docClient.createSet([request])
+          }
+        };
 			// Delete the account here. Update this as mentioned above.
-				docClient.delete(params, function(err, data) {
+				docClient.delete(delParams, function(err, data) {
 				  if (err){
 				    console.error("Database error: ", JSON.stringify(err, null, 2));
 				    res.render('error', {sitename: sitename, error_msg: "Database error - could not delete friend.", return_page: return_page, logged_in: true, name: name});

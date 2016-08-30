@@ -604,7 +604,7 @@ app.post('/delete_friend', function(req,res){
 		  console.log(hashedPassword);
 			if (hashedPassword == data.Items[0].password){
 			  
-			  var delParams = {
+			  var myDelParams = {
           TableName:'users',
           Key: {'username': name},
           UpdateExpression: 'delete #attribute :values',
@@ -613,6 +613,17 @@ app.post('/delete_friend', function(req,res){
           },
           ExpressionAttributeValues: {
             ':values': docClient.createSet([request])
+          }
+        };
+        var theirDelParams = {
+          TableName:'users',
+          Key: {'username': request},
+          UpdateExpression: 'delete #attribute :values',
+          ExpressionAttributeNames : {
+            '#attribute': 'friend_list'
+          },
+          ExpressionAttributeValues: {
+            ':values': docClient.createSet([name])
           }
         };
 			// Delete the account here. Update this as mentioned above.
@@ -652,12 +663,14 @@ app.post('/delete_friend', function(req,res){
                     }
                   };
                   docClient.update(myParams, function(err,data){
+                    console.log("Hey1");
                     if (err){
                       console.error("Database error: ", JSON.stringify(err, null, 2));
                       res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", logged_in: logged_in, name: name, return_page: return_page});
                       return;
                     } else {
                       docClient.update(theirParams, function(err,data){
+                        console.log("Hey2");
                         if (err){
                           console.error("Database error: ", JSON.stringify(err, null, 2));
                           res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", logged_in: logged_in, name: name, return_page: return_page});

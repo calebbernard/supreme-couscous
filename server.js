@@ -568,7 +568,7 @@ app.get('/check_friends', function(req,res){
 });
 
 // Delete a Friend Code
-app.post('delete_friend', function(req,res){
+app.post('/delete_friend', function(req,res){
   var sess = req.session;
   var request = req.body.who_to_delete;
   var name = sess.name;

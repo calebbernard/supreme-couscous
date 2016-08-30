@@ -601,6 +601,7 @@ app.post('/delete_friend', function(req,res){
 		  var hash = crypto.createHash('sha256');
 		  hash.update(pass + salt);
 		  var hashedPassword = hash.digest('hex');
+		  console.log(hashedPassword);
 			if (hashedPassword == data.Items.password){
 			// Delete the account here. Update this as mentioned above.
 				docClient.delete(params, function(err, data) {

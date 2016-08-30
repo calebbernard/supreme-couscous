@@ -626,8 +626,7 @@ app.post('/delete_friend', function(req,res){
             ':values': docClient.createSet([name])
           }
         };
-			// Delete the account here. Update this as mentioned above.
-				docClient.update(delParams, function(err, data) {
+				docClient.update(myDelParams, function(err, data) {
 				  if (err){
 				    console.error("Database error: ", JSON.stringify(err, null, 2));
 				    res.render('error', {sitename: sitename, error_msg: "Database error - could not delete friend.", return_page: return_page, logged_in: true, name: name});
@@ -640,46 +639,15 @@ app.post('/delete_friend', function(req,res){
               for (x = 0; x < data.Items[0].friend_list.length; x++) {
                 if (data.Items[0].friend_list.values[x] == request) {
                   // Remove the user from the friend request inbox AND remove this user from their outbox.
-                  var myParams = {
-                    TableName:'users',
-                    Key: {'username': name},
-                    UpdateExpression: 'delete #attribute :values',
-                    ExpressionAttributeNames : {
-                      '#attribute': 'friend_list'
-                    },
-                    ExpressionAttributeValues: {
-                      ':values': docClient.createSet([request])
-                    }
-                  };
-                  var theirParams = {
-                    TableName:'users',
-                    Key: {'username': request},
-                    UpdateExpression: 'delete #attribute :values',
-                    ExpressionAttributeNames : {
-                      '#attribute': 'friend_list'
-                    },
-                    ExpressionAttributeValues : {
-                      ':values': docClient.createSet([name])
-                    }
-                  };
-                  docClient.update(myParams, function(err,data){
+                  docClient.update(theirDelParams, function(err,data){
                     console.log("Hey1");
                     if (err){
-                      console.error("Database error: ", JSON.stringify(err, null, 2));
+                      console.error("Database error1: ", JSON.stringify(err, null, 2));
                       res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", logged_in: logged_in, name: name, return_page: return_page});
                       return;
                     } else {
-                      docClient.update(theirParams, function(err,data){
-                        console.log("Hey2");
-                        if (err){
-                          console.error("Database error: ", JSON.stringify(err, null, 2));
-                          res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", logged_in: logged_in, name: name, return_page: return_page});
-                          return;
-                        } else {
-                          res.render('success', {sitename: sitename, logged_in: logged_in, name: name, return_page: return_page, success_msg: request + " has been removed from your friends list"});
-                          return;
-                        }
-                      });
+                      res.render('success', {sitename: sitename, logged_in: logged_in, name: name, return_page: return_page, success_msg: request + " has been removed from your friends list"});
+                      return;
                     }
                   });
                 } else {

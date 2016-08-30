@@ -4,6 +4,13 @@ Have the stable and current servers point to different home pages so they can ha
 
 
 
+Bugs:
+(Non harmful)
+- A user friend requested themselves
+- If two users mutually request each other, one of the invites remains
+
+
+
 Social Features Checklist:
 
 

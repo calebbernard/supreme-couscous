@@ -616,7 +616,7 @@ app.post('/delete_friend', function(req,res){
           }
         };
 			// Delete the account here. Update this as mentioned above.
-				docClient.delete(delParams, function(err, data) {
+				docClient.update(delParams, function(err, data) {
 				  if (err){
 				    console.error("Database error: ", JSON.stringify(err, null, 2));
 				    res.render('error', {sitename: sitename, error_msg: "Database error - could not delete friend.", return_page: return_page, logged_in: true, name: name});

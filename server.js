@@ -632,6 +632,7 @@ app.post('/delete_friend', function(req,res){
 				    res.render('error', {sitename: sitename, error_msg: "Database error - could not delete friend.", return_page: return_page, logged_in: true, name: name});
 				  } else {
 				    console.log(data);
+				    console.log(data.Items[0].friend_list);
             if (!data.Items[0].friend_list.values) {
               res.render('error', {sitename: sitename, error_msg: "You have no friends to delete.", logged_in: logged_in, name: name, return_page: return_page});
               return;

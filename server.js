@@ -30,7 +30,7 @@ var docClient = new AWS.DynamoDB.DocumentClient();
 var sess;
 
 // Modify this to change the sitename everywhere
-var sitename = "Branches";
+var sitename = "Branches - Beta";
 
 
 /*
@@ -568,10 +568,11 @@ app.get('/check_friends', function(req,res){
 });
 
 // Delete a Friend Code
-app.post('delete_page', function(req,res){
+app.post('delete_friend', function(req,res){
   var sess = req.session;
   var request = req.body.who_to_delete;
   var name = sess.name;
+  var pass = req.body.password;
   var return_page = req.body.page || "/";
   var logged_in;
   if(name === "" || name === undefined){
@@ -594,59 +595,77 @@ app.post('delete_page', function(req,res){
       res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", logged_in: logged_in, name: name, return_page: return_page});
       return;
     } else {
-      if (!data.Items[0].friend_list.values) {
-        res.render('error', {sitename: sitename, error_msg: "You have no friends to delete.", logged_in: logged_in, name: name, return_page: return_page});
-        return;
-      } else {
-        for (x = 0; x < data.Items[0].friend_list.length; x++) {
-          if (data.Items[0].friend_list.values[x] == request) {
-            // Remove the user from the friend request inbox AND remove this user from their outbox.
-            var myParams = {
-              TableName:'users',
-              Key: {'username': name},
-              UpdateExpression: 'delete #attribute :values',
-              ExpressionAttributeNames : {
-                '#attribute': 'friend_list'
-              },
-              ExpressionAttributeValues: {
-                ':values': docClient.createSet([request])
-              }
-            };
-            var theirParams = {
-              TableName:'users',
-              Key: {'username': request},
-              UpdateExpression: 'delete #attribute :values',
-              ExpressionAttributeNames : {
-                '#attribute': 'friend_list'
-              },
-              ExpressionAttributeValues : {
-                ':values': docClient.createSet([name])
-              }
-            };
-            docClient.update(myParams, function(err,data){
-              if (err){
-                console.error("Database error: ", JSON.stringify(err, null, 2));
-                res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", logged_in: logged_in, name: name, return_page: return_page});
-                return;
-              } else {
-                docClient.update(theirParams, function(err,data){
-                  if (err){
-                    console.error("Database error: ", JSON.stringify(err, null, 2));
-                    res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", logged_in: logged_in, name: name, return_page: return_page});
-                    return;
-                  } else {
-                    res.render('success', {sitename: sitename, logged_in: logged_in, name: name, return_page: return_page, success_msg: request + " has been removed from your friends list"});
-                  }
-                });
-              }
-            });
-          } else {
-            if (x == data.Items[0].friend_request_inbox.values.length) {
-              res.render('error', {sitename: sitename, error_msg: "That user could not be found in your friends list.", name: name, logged_in: logged_in, return_page: return_page});
+      // Now we want to hash the given password using the salt in the database.
+		  var salt = data.Item.salt;
+		  var hash = crypto.createHash('sha256');
+		  hash.update(pass + salt);
+		  var hashedPassword = hash.digest('hex');
+			if (hashedPassword == data.Item.password){
+			// Delete the account here. Update this as mentioned above.
+				docClient.delete(params, function(err, data) {
+				  if (err){
+				    res.render('error', {sitename: sitename, error_msg: "Database error - could not delete friend.", return_page: return_page, logged_in: true, name: name});
+				  } else {
+            if (!data.Items[0].friend_list.values) {
+              res.render('error', {sitename: sitename, error_msg: "You have no friends to delete.", logged_in: logged_in, name: name, return_page: return_page});
               return;
+            } else {
+              for (x = 0; x < data.Items[0].friend_list.length; x++) {
+                if (data.Items[0].friend_list.values[x] == request) {
+                  // Remove the user from the friend request inbox AND remove this user from their outbox.
+                  var myParams = {
+                    TableName:'users',
+                    Key: {'username': name},
+                    UpdateExpression: 'delete #attribute :values',
+                    ExpressionAttributeNames : {
+                      '#attribute': 'friend_list'
+                    },
+                    ExpressionAttributeValues: {
+                      ':values': docClient.createSet([request])
+                    }
+                  };
+                  var theirParams = {
+                    TableName:'users',
+                    Key: {'username': request},
+                    UpdateExpression: 'delete #attribute :values',
+                    ExpressionAttributeNames : {
+                      '#attribute': 'friend_list'
+                    },
+                    ExpressionAttributeValues : {
+                      ':values': docClient.createSet([name])
+                    }
+                  };
+                  docClient.update(myParams, function(err,data){
+                    if (err){
+                      console.error("Database error: ", JSON.stringify(err, null, 2));
+                      res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", logged_in: logged_in, name: name, return_page: return_page});
+                      return;
+                    } else {
+                      docClient.update(theirParams, function(err,data){
+                        if (err){
+                          console.error("Database error: ", JSON.stringify(err, null, 2));
+                          res.render('error', {sitename: sitename, error_msg: "Something weird happened with the database.", logged_in: logged_in, name: name, return_page: return_page});
+                          return;
+                        } else {
+                          res.render('success', {sitename: sitename, logged_in: logged_in, name: name, return_page: return_page, success_msg: request + " has been removed from your friends list"});
+                          return;
+                        }
+                      });
+                    }
+                  });
+                } else {
+                  if (x == data.Items[0].friend_request_inbox.values.length) {
+                    res.render('error', {sitename: sitename, error_msg: "That user could not be found in your friends list.", name: name, logged_in: logged_in, return_page: return_page});
+                    return;
+                  }
+                }
+              }
             }
-          }
-        }
+				  }
+				});
+      } else {
+        res.render('error', {sitename: sitename, name: name, logged_in: logged_in, return_page: return_page, error_msg: "Wrong password, try again!"});
+        return;
       }
     }
   });

@@ -640,6 +640,7 @@ app.post('/delete_friend', function(req,res){
               for (x = 0; x < data.Items[0].friend_list.length; x++) {
                 if (data.Items[0].friend_list.values[x] == request) {
                   // Remove the user from the friend request inbox AND remove this user from their outbox.
+                  console.log("hey0");
                   docClient.update(theirDelParams, function(err,data){
                     console.log("Hey1");
                     if (err){
